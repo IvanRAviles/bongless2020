@@ -1,306 +1,275 @@
+// --- 1. PASTE YOUR FIREBASE CONFIG HERE ---
+// (Replace the lines below with the code you copied from Firebase)
+const firebaseConfig = {
+  apiKey: "AIzaSyBOvsein855aMcyGkw4GTkZ3UD_j-36QGQ",
+  authDomain: "bongless2020.firebaseapp.com",
+  projectId: "bongless2020",
+  storageBucket: "bongless2020.firebasestorage.app",
+  messagingSenderId: "959363193575",
+  appId: "1:959363193575:web:40e71b7169bdcdcac46042"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// --- STATE MANAGEMENT ---
+let isAdmin = false;
+let cart = [];
+let menuData = [];
+
+// --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // --- CONFIGURATION ---
-    const GALLERY_IMAGES = [
-        "1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg", 
-        "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",
-        "11.jpg", "12.jpg", "13.jpg", "14.jpg", "15.jpg",
-        "16.jpg"
-    ];
+    setupAuthListener();
+    loadMenu();
+    setupGallery();
+});
 
-    // DOM Elements
-    const menuList = document.getElementById('menu-list');
-    const galleryWrapper = document.getElementById('gallery-wrapper');
-    const cartFloater = document.getElementById('cart-floater');
-    const cartCount = document.getElementById('cart-count');
-    const cartTotalLabel = document.getElementById('cart-total');
-    const cartModal = document.getElementById('cart-modal');
-    const cartItemsContainer = document.getElementById('cart-items');
-    const modalTotal = document.getElementById('modal-total');
-    
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightbox-img');
+// --- AUTHENTICATION ---
+function setupAuthListener() {
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            isAdmin = true;
+            document.getElementById('admin-login-btn').innerText = "Salir";
+            document.getElementById('admin-add-btn').classList.add('visible');
+            loadMenu(); // Reload menu to show edit buttons
+        } else {
+            isAdmin = false;
+            document.getElementById('admin-login-btn').innerText = "Admin";
+            document.getElementById('admin-add-btn').classList.remove('visible');
+            loadMenu();
+        }
+    });
+}
 
-    // State
-    let MENU_DATA = {};
-    let CART = [];
-
-    // Initialize
-    initGallery();
-    fetchMenu();
-
-    // --- 1. GALLERY LOGIC ---
-    function initGallery() {
-        if(!galleryWrapper) return;
-
-        galleryWrapper.innerHTML = GALLERY_IMAGES.map(img => `
-            <div class="swiper-slide">
-                <img src="assets/images/gallery/${img}" alt="Platillo Bongless" loading="lazy" onclick="openLightbox(this.src)">
-            </div>
-        `).join('');
-
-        new Swiper(".mySwiper", {
-            slidesPerView: 1.2, 
-            spaceBetween: 10,
-            centeredSlides: true,
-            loop: true,
-            autoplay: {
-                delay: 3000,
-                disableOnInteraction: false,
-            },
-            pagination: {
-                el: ".swiper-pagination",
-                clickable: true,
-            },
-            breakpoints: {
-                640: { slidesPerView: 2.2, spaceBetween: 20 },
-                1024: { slidesPerView: 3.5, spaceBetween: 30 },
-            },
-        });
+document.getElementById('admin-login-btn').onclick = () => {
+    if (isAdmin) {
+        auth.signOut();
+    } else {
+        document.getElementById('login-modal').classList.add('open');
     }
+};
 
-    window.openLightbox = function(src) {
-        lightbox.classList.add('active');
-        lightboxImg.src = src;
-    }
+function loginAdmin() {
+    const email = document.getElementById('admin-email').value;
+    const pass = document.getElementById('admin-pass').value;
+    auth.signInWithEmailAndPassword(email, pass)
+        .then(() => document.getElementById('login-modal').classList.remove('open'))
+        .catch(e => alert("Error: " + e.message));
+}
 
-    window.closeLightbox = function() {
-        lightbox.classList.remove('active');
-    }
+// --- MENU LOADING (FROM FIREBASE) ---
+function loadMenu() {
+    const container = document.getElementById('menu-list');
+    container.innerHTML = '<div class="loading"><i class="fas fa-fire fa-spin"></i> Cargando menú...</div>';
 
-    // --- 2. MENU LOGIC ---
-    async function fetchMenu() {
-        try {
-            const response = await fetch('assets/data/menu.json?v=' + new Date().getTime());
-            if (!response.ok) throw new Error('Failed to load menu');
-            
-            const data = await response.json();
-            MENU_DATA = data;
-            
-            const badge = document.getElementById('status-badge');
-            if(data.info.status !== 'open') {
-                badge.innerText = "CERRADO";
-                badge.style.color = "red";
-                badge.style.background = "rgba(255,0,0,0.1)";
-                badge.style.borderColor = "red";
+    db.collection("menu").get().then((querySnapshot) => {
+        const sections = { combos: [], especiales: [], ordenes: [] };
+        menuData = [];
+
+        querySnapshot.forEach((doc) => {
+            const item = doc.data();
+            item.id = doc.id;
+            menuData.push(item);
+            if (sections[item.section]) {
+                sections[item.section].push(item);
             }
+        });
 
-            renderMenu(data);
-        } catch (error) {
-            menuList.innerHTML = `<div class="loading" style="color:red">Error cargando menú. Intenta recargar.</div>`;
-            console.error(error);
-        }
+        renderMenuHTML(sections);
+    }).catch(error => {
+        console.error("Error loading menu:", error);
+        container.innerHTML = '<p class="loading">Error cargando el menú.</p>';
+    });
+}
+
+function renderMenuHTML(sections) {
+    const container = document.getElementById('menu-list');
+    let html = '';
+
+    const titles = { 
+        combos: "Combos Bongless", 
+        especiales: "Especiales", 
+        ordenes: "Ordenes Extra" 
+    };
+
+    for (const [key, items] of Object.entries(sections)) {
+        if (items.length === 0 && !isAdmin) continue;
+
+        html += `<h3 class="section-title">${titles[key] || key.toUpperCase()}</h3>`;
+        html += `<div class="menu-section">`;
+
+        items.forEach(item => {
+            html += createItemCard(item);
+        });
+
+        html += `</div>`;
+    }
+    container.innerHTML = html;
+}
+
+function createItemCard(item) {
+    let adminBtns = '';
+    if (isAdmin) {
+        adminBtns = `
+        <div class="admin-controls">
+            <button class="btn-edit" onclick="openEditModal('${item.id}')">Editar</button>
+            <button class="btn-delete" onclick="deleteItem('${item.id}')">Borrar</button>
+        </div>`;
     }
 
-    function renderMenu(data) {
-        menuList.innerHTML = '';
-        const salsas = data.salsas || [];
+    // Check if item has options (You can add these manually in Firestore later if needed)
+    // For simplicity, we are defaulting to standard buttons
+    
+    return `
+    <div class="item-card">
+        <div class="item-header">
+            <span class="item-name">${item.name}</span>
+            <span class="item-price">$${item.price}</span>
+        </div>
+        <p class="item-desc">${item.desc}</p>
+        <button class="btn-add" onclick="addToCart('${item.id}', '${item.name}', ${item.price})">Agregar</button>
+        ${adminBtns}
+    </div>`;
+}
 
-        data.sections.forEach(section => {
-            const sectionHtml = document.createElement('div');
-            sectionHtml.className = 'menu-section';
-            
-            let html = `<h3 class="section-title">${section.title}</h3>`;
-            
-            section.items.forEach(item => {
-                const needsSalsa = section.id === 'combos';
-                html += buildItemCard(item, needsSalsa, salsas);
-            });
+// --- ADMIN ACTIONS ---
+function openAdminModal() {
+    // Clear fields for new item
+    document.getElementById('edit-id').value = "";
+    document.getElementById('edit-name').value = "";
+    document.getElementById('edit-price').value = "";
+    document.getElementById('edit-desc').value = "";
+    document.getElementById('edit-img').value = "";
+    document.getElementById('modal-title').innerText = "Nuevo Platillo";
+    document.getElementById('item-modal').classList.add('open');
+}
 
-            sectionHtml.innerHTML = html;
-            menuList.appendChild(sectionHtml);
+function openEditModal(id) {
+    const item = menuData.find(i => i.id === id);
+    if (!item) return;
+
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-name').value = item.name;
+    document.getElementById('edit-price').value = item.price;
+    document.getElementById('edit-desc').value = item.desc;
+    document.getElementById('edit-section').value = item.section;
+    document.getElementById('edit-img').value = item.imageUrl || "";
+    
+    document.getElementById('modal-title').innerText = "Editar Platillo";
+    document.getElementById('item-modal').classList.add('open');
+}
+
+function saveItem() {
+    const id = document.getElementById('edit-id').value;
+    const data = {
+        name: document.getElementById('edit-name').value,
+        price: Number(document.getElementById('edit-price').value),
+        desc: document.getElementById('edit-desc').value,
+        section: document.getElementById('edit-section').value,
+        imageUrl: document.getElementById('edit-img').value
+    };
+
+    if (id) {
+        db.collection("menu").doc(id).update(data).then(() => {
+            document.getElementById('item-modal').classList.remove('open');
+            loadMenu();
+        });
+    } else {
+        db.collection("menu").add(data).then(() => {
+            document.getElementById('item-modal').classList.remove('open');
+            loadMenu();
         });
     }
+}
 
-    function buildItemCard(item, needsSalsa, salsas) {
-        let optionsHtml = '';
-        let salsaHtml = '';
+function deleteItem(id) {
+    if (confirm("¿Estás seguro de borrar este platillo?")) {
+        db.collection("menu").doc(id).delete().then(() => loadMenu());
+    }
+}
 
-        if (item.options && item.options.length > 0) {
-            optionsHtml = `
-                <div class="option-group">
-                    <label class="option-label">Acompañamiento:</label>
-                    <select class="custom-select" id="opt-${item.id}">
-                        ${item.options.map((opt, idx) => 
-                            `<option value="${idx}" data-price="${opt.price}">${opt.name} ${opt.price > 0 ? '(+$'+opt.price+')' : ''}</option>`
-                        ).join('')}
-                    </select>
-                </div>
-            `;
-        }
+// --- CART LOGIC (Simplified from your original) ---
+function addToCart(id, name, price) {
+    const existing = cart.find(i => i.id === id);
+    if (existing) {
+        existing.qty++;
+    } else {
+        cart.push({ id, name, price, qty: 1 });
+    }
+    updateCartUI();
+}
 
-        if (needsSalsa) {
-            salsaHtml = `
-                <div class="option-group">
-                    <label class="option-label">Elige tu Salsa:</label>
-                    <select class="custom-select" id="salsa-${item.id}">
-                        ${salsas.map(s => `<option value="${s}">${s}</option>`).join('')}
-                    </select>
-                </div>
-            `;
-        }
+function updateCartUI() {
+    const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+    const count = cart.reduce((acc, item) => acc + item.qty, 0);
+    
+    document.getElementById('cart-count').innerText = count;
+    document.getElementById('cart-total').innerText = "$" + total;
+    document.getElementById('modal-total').innerText = "$" + total;
+    
+    const floater = document.getElementById('cart-floater');
+    if (count > 0) floater.classList.add('active');
+    else floater.classList.remove('active');
+    
+    renderCartList();
+}
 
-        const inputsArea = (optionsHtml || salsaHtml) ? `<div class="options-area">${optionsHtml}${salsaHtml}</div>` : '';
-
-        return `
-            <div class="item-card">
-                <div class="item-header">
-                    <span class="item-name">${item.name}</span>
-                    <span class="item-price">$${item.price}</span>
-                </div>
-                <p class="item-desc">${item.desc || ''}</p>
-                ${inputsArea}
-                <button class="btn-add" onclick="addToCart('${item.id}')">AGREGAR</button>
+function renderCartList() {
+    const list = document.getElementById('cart-items');
+    if (cart.length === 0) {
+        list.innerHTML = '<p class="empty-msg">Tu carrito está vacío.</p>';
+        return;
+    }
+    
+    list.innerHTML = cart.map((item, index) => `
+        <div class="cart-item-row">
+            <div class="item-details-left">
+                <h4>${item.name}</h4>
+                <p>Cantidad: ${item.qty}</p>
             </div>
-        `;
-    }
-
-    // --- 3. CART LOGIC ---
-    window.addToCart = function(itemId) {
-        let itemData = null;
-        for (const sec of MENU_DATA.sections) {
-            const found = sec.items.find(i => i.id === itemId);
-            if (found) { itemData = found; break; }
-        }
-        if (!itemData) return;
-
-        let finalPrice = itemData.price;
-        let selectedOption = null;
-        let selectedSalsa = null;
-
-        const optSelect = document.getElementById(`opt-${itemId}`);
-        if (optSelect) {
-            const idx = optSelect.value;
-            const optObj = itemData.options[idx];
-            finalPrice += optObj.price;
-            selectedOption = optObj.name;
-        }
-
-        const salsaSelect = document.getElementById(`salsa-${itemId}`);
-        if (salsaSelect) {
-            selectedSalsa = salsaSelect.value;
-        }
-
-        CART.push({
-            id: itemId,
-            name: itemData.name,
-            basePrice: itemData.price,
-            finalPrice: finalPrice,
-            option: selectedOption,
-            salsa: selectedSalsa
-        });
-
-        updateCartUI();
-    };
-
-    window.removeFromCart = function(index) {
-        CART.splice(index, 1);
-        updateCartUI();
-        if (CART.length === 0) closeCart();
-    };
-
-    function updateCartUI() {
-        const total = CART.reduce((sum, item) => sum + item.finalPrice, 0);
-        
-        cartCount.innerText = CART.length;
-        cartTotalLabel.innerText = `$${total}`;
-        modalTotal.innerText = `$${total}`;
-
-        if (CART.length > 0) cartFloater.classList.add('active');
-        else cartFloater.classList.remove('active');
-
-        renderCartItems();
-    }
-
-    function renderCartItems() {
-        if (CART.length === 0) {
-            cartItemsContainer.innerHTML = '<p class="empty-msg" style="text-align:center; color:#666; padding:20px;">Tu carrito está vacío.</p>';
-            return;
-        }
-
-        cartItemsContainer.innerHTML = CART.map((item, index) => `
-            <div class="cart-item-row">
-                <div class="item-details-left">
-                    <h4>${item.name}</h4>
-                    <p>
-                        ${item.option ? item.option : ''} 
-                        ${item.salsa ? ' • ' + item.salsa : ''}
-                    </p>
-                </div>
-                <div class="item-price-right">
-                    <span class="price">$${item.finalPrice}</span>
-                    <button class="delete-btn" onclick="removeFromCart(${index})">Eliminar</button>
-                </div>
+            <div class="item-price-right">
+                <span class="price">$${item.price * item.qty}</span>
+                <button class="delete-btn" onclick="removeFromCart(${index})">Eliminar</button>
             </div>
-        `).join('');
-    }
+        </div>
+    `).join('');
+}
 
-    window.openCart = function() { cartModal.classList.add('open'); };
-    window.closeCart = function() { cartModal.classList.remove('open'); };
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCartUI();
+}
 
-    // --- 4. WHATSAPP LOGIC ---
-    window.sendOrder = function() {
-        if (CART.length === 0) return;
+function openCart() { document.getElementById('cart-modal').classList.add('open'); }
+function closeCart() { document.getElementById('cart-modal').classList.remove('open'); }
 
-        let msg = "🔥 *NUEVO PEDIDO - BONGLESS 2020* 🔥\n\n";
-        
-        CART.forEach((item) => {
-            msg += `▪️ *${item.name}*\n`;
-            if (item.option) msg += `   └ ${item.option}\n`;
-            if (item.salsa)  msg += `   └ Salsa: ${item.salsa}\n`;
-            msg += `   💲 $${item.finalPrice}\n\n`;
-        });
+function sendOrder() {
+    if (cart.length === 0) return;
+    
+    let msg = "Hola Bongless 2020, quiero pedir:\n\n";
+    cart.forEach(item => {
+        msg += `▪ ${item.qty}x ${item.name} - $${item.price * item.qty}\n`;
+    });
+    
+    const total = document.getElementById('modal-total').innerText;
+    msg += `\n*TOTAL: ${total}*`;
+    
+    window.open(`https://wa.me/5216861969928?text=${encodeURIComponent(msg)}`, '_blank');
+}
 
-        const total = CART.reduce((sum, item) => sum + item.finalPrice, 0);
-        msg += `💰 *TOTAL: $${total}*\n`;
-        msg += `📍 *Dirección:* (Escribe tu dirección aquí)\n`;
-        msg += `📝 *Notas:* \n`;
-
-        const phone = MENU_DATA.info.phone;
-        const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-        
-        window.open(url, '_blank');
-    };
-});
-/* --- SCROLL AWARE HEADER LOGIC --- */
-document.addEventListener('DOMContentLoaded', function() {
-    const header = document.querySelector('.main-header');
-    const body = document.body;
-    let lastScrollTop = 0;
-    const scrollThreshold = 100; // How far to scroll before hiding
-
-    // 1. Compensate for the fixed header by adding padding to body
-    function adjustBodyPadding() {
-        if(header) {
-            const headerHeight = header.offsetHeight;
-            body.style.paddingTop = headerHeight + 'px';
-        }
-    }
-
-    // Run on load and resize
-    adjustBodyPadding();
-    window.addEventListener('resize', adjustBodyPadding);
-
-    // 2. Hide/Show logic on scroll
-    window.addEventListener('scroll', function() {
-        let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-
-        // Prevent negative scroll values on mobile (rubber banding)
-        if (currentScroll <= 0) {
-            header.classList.remove('header-hidden');
-            lastScrollTop = 0;
-            return;
-        }
-
-        // If scrolling DOWN and passed threshold
-        if (currentScroll > lastScrollTop && currentScroll > scrollThreshold) {
-            header.classList.add('header-hidden');
-        } 
-        // If scrolling UP
-        else if (currentScroll < lastScrollTop) {
-            header.classList.remove('header-hidden');
-        }
-
-        lastScrollTop = currentScroll;
-    }, { passive: true });
-});
+// --- GALLERY (Swiper) ---
+function setupGallery() {
+    // You can also move gallery images to Firebase later if you want
+    // For now, we keep the static logic or manual add
+    const swiperWrapper = document.getElementById('gallery-wrapper');
+    // Example static images - you can replace these with dynamic ones if you add a 'gallery' collection
+    const images = [
+        'assets/images/boneless1.jpg', // You need to ensure these files exist or use URLs
+        'assets/images/boneless2.jpg'
+    ];
+    
+    // If you don't have images locally, the swiper might look empty. 
+    // You can populate this from menuData if items have imageUrls.
+}
