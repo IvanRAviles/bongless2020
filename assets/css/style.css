@@ -59,7 +59,7 @@ a { text-decoration: none; color: inherit; }
     transform: scale(1.05); 
 }
 
-/* TEXT BRAND RECREATION */
+/* TEXT BRAND RECREATION (FIXED OVERLAP) */
 .brand-title-block {
     display: flex;
     flex-direction: column;
@@ -77,21 +77,19 @@ a { text-decoration: none; color: inherit; }
     align-items: center;
 }
 
+/* Updated: No longer absolutely positioned. Flame acts as the 'O' */
 .fire-letter {
     color: var(--text-primary);
-    position: relative;
-    display: inline-block;
+    display: flex;
+    align-items: center;
 }
 
 .flame-icon {
     color: var(--brand-orange);
-    position: absolute;
-    font-size: 1.8rem;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -40%);
-    z-index: 1;
+    font-size: 2.2rem;
+    margin: 0 2px 0 1px; /* Spacing between B and NGLESS */
     text-shadow: 0 0 10px rgba(255, 85, 0, 0.8);
+    /* Removed absolute positioning so it doesn't overlap the B */
 }
 
 .year-stack {
@@ -99,7 +97,7 @@ a { text-decoration: none; color: inherit; }
     flex-direction: column;
     font-size: 1.1rem;
     line-height: 0.85;
-    margin-left: 2px;
+    margin-left: 4px;
     font-weight: 700;
 }
 
@@ -120,7 +118,6 @@ a { text-decoration: none; color: inherit; }
     margin-top: 5px;
 }
 
-/* Added specific spacing for lines */
 .info-line {
     margin-bottom: 6px;
 }
@@ -146,14 +143,25 @@ a { text-decoration: none; color: inherit; }
     border: 1px solid rgba(0, 255, 0, 0.3);
 }
 
-/* --- MENU STYLES --- */
+/* --- MENU STYLES (UPDATED TO GRID) --- */
 .menu-container {
-    max-width: 600px;
+    max-width: 1000px; /* Increased max-width to fit multiple columns */
     margin: 0 auto;
     padding: 20px 15px;
 }
 
+/* This creates the grid layout */
+.menu-section {
+    display: grid;
+    /* This magic line makes it 1 column on phone, 2 on tablet, 3 on desktop */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+/* Make title span the full width of the grid */
 .section-title {
+    grid-column: 1 / -1;
     color: var(--brand-gold);
     text-transform: uppercase;
     font-family: 'Oswald', sans-serif;
@@ -171,9 +179,11 @@ a { text-decoration: none; color: inherit; }
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 15px;
-    margin-bottom: 15px;
     position: relative;
     overflow: hidden;
+    height: 100%; /* Makes cards same height in the row */
+    display: flex;
+    flex-direction: column;
 }
 
 .item-header {
@@ -185,10 +195,10 @@ a { text-decoration: none; color: inherit; }
 
 .item-name { font-weight: 700; font-size: 1.1rem; color: #fff; }
 .item-price { font-weight: 800; color: var(--brand-gold); font-size: 1.15rem; white-space: nowrap; }
-.item-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 12px; }
+.item-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 12px; flex-grow: 1; }
 
 /* Options & Selects */
-.options-area { margin-top: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; }
+.options-area { margin-top: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; }
 .option-group { margin-bottom: 10px; }
 .option-group:last-child { margin-bottom: 0; }
 
