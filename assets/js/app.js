@@ -262,3 +262,45 @@ document.addEventListener('DOMContentLoaded', () => {
         window.open(url, '_blank');
     };
 });
+/* --- SCROLL AWARE HEADER LOGIC --- */
+document.addEventListener('DOMContentLoaded', function() {
+    const header = document.querySelector('.main-header');
+    const body = document.body;
+    let lastScrollTop = 0;
+    const scrollThreshold = 100; // How far to scroll before hiding
+
+    // 1. Compensate for the fixed header by adding padding to body
+    function adjustBodyPadding() {
+        if(header) {
+            const headerHeight = header.offsetHeight;
+            body.style.paddingTop = headerHeight + 'px';
+        }
+    }
+
+    // Run on load and resize
+    adjustBodyPadding();
+    window.addEventListener('resize', adjustBodyPadding);
+
+    // 2. Hide/Show logic on scroll
+    window.addEventListener('scroll', function() {
+        let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+
+        // Prevent negative scroll values on mobile (rubber banding)
+        if (currentScroll <= 0) {
+            header.classList.remove('header-hidden');
+            lastScrollTop = 0;
+            return;
+        }
+
+        // If scrolling DOWN and passed threshold
+        if (currentScroll > lastScrollTop && currentScroll > scrollThreshold) {
+            header.classList.add('header-hidden');
+        } 
+        // If scrolling UP
+        else if (currentScroll < lastScrollTop) {
+            header.classList.remove('header-hidden');
+        }
+
+        lastScrollTop = currentScroll;
+    }, { passive: true });
+});
