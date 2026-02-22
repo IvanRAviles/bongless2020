@@ -23,12 +23,19 @@ a { text-decoration: none; color: inherit; }
 /* --- HEADER & LOGO --- */
 .main-header {
     background: linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(10,10,10,0.95) 100%);
-    position: sticky;
+    position: fixed; /* Changed from sticky to fixed */
+    width: 100%;     /* Ensure it spans the full width */
     top: 0;
     z-index: 100;
     border-bottom: 2px solid var(--brand-orange);
     padding-bottom: 15px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    transition: transform 0.3s ease-in-out; /* Smooth slide animation */
+}
+
+/* New class to hide the header */
+.header-hidden {
+    transform: translateY(-100%);
 }
 
 .brand-container {
