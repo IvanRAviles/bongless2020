@@ -5,96 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bongless 2020 | Menú Digital</title>
     <meta name="description" content="Los originales Bongless 2020. Boneless, alitas, papas y más en Mexicali.">
-    
     <!-- Styles -->
     <link rel="stylesheet" href="assets/css/style.css">
-    
-    <!-- FONTS: Oswald (For your Logo) and Roboto -->
+    <!-- FONTS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
-    <!-- Swiper CSS (For the Gallery) -->
+    <!-- Swiper CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="icon" type="image/png" href="assets/images/logo.png">
 </head>
 <body>
 
-    <!-- Header / Brand -->
+    <!-- Header -->
     <header class="main-header">
         <div class="brand-container">
-            <!-- 1. The Circle Logo -->
             <div class="logo-wrapper">
                 <img src="assets/images/logo.png" alt="Logo Bongless" class="logo-img">
             </div>
-
-            <!-- 2. The Brand Name -->
             <div class="brand-title-block">
                 <div class="main-title">
                     <span class="fire-letter">B<i class="fas fa-fire flame-icon"></i></span>NGLESS
-                    <div class="year-stack">
-                        <span>20</span>
-                        <span>20</span>
-                    </div>
+                    <div class="year-stack"><span>20</span><span>20</span></div>
                 </div>
                 <div class="sub-title">LOS ORIGINALES</div>
             </div>
         </div>
-        
-        <!-- Info Card -->
         <div class="info-card">
-            <!-- ADDRESS -->
-            <p class="info-line">
-                <i class="fas fa-map-pin"></i> 
-                <a href="https://maps.google.com/?q=Av.+Sinaloa+1520,+Esperanza,+Mexicali+B.C.+21140" target="_blank">
-                    Av. Sinaloa 1520, Esperanza, Mexicali B.C. 21140
-                </a>
-            </p>
-            
-            <!-- HOURS -->
-            <p class="info-line">
-                <i class="far fa-clock"></i> 
-                Martes a Domingo: 5:00pm - 10:00pm
-            </p>
-
-            <!-- SOCIALS (UPDATED) -->
+            <p class="info-line"><i class="fas fa-map-pin"></i> <a href="https://maps.google.com/?q=Av.+Sinaloa+1520,+Esperanza,+Mexicali+B.C.+21140" target="_blank">Av. Sinaloa 1520, Esperanza, Mexicali B.C. 21140</a></p>
+            <p class="info-line"><i class="far fa-clock"></i> Martes a Domingo: 5:00pm - 10:00pm</p>
             <div class="socials">
-                <a href="https://facebook.com/Bongless2020" target="_blank" class="social-link">
-                    <i class="fab fa-facebook"></i> Bongless 20-20
-                </a>
-                <a href="https://instagram.com/bongless20.20" target="_blank" class="social-link">
-                    <i class="fab fa-instagram"></i> bongless20.20
-                </a>
+                <a href="https://facebook.com/Bongless2020" target="_blank" class="social-link"><i class="fab fa-facebook"></i> Bongless 20-20</a>
+                <a href="https://instagram.com/bongless20.20" target="_blank" class="social-link"><i class="fab fa-instagram"></i> bongless20.20</a>
             </div>
-            
             <div class="status-badge" id="status-badge">ABIERTO</div>
         </div>
     </header>
 
-    <!-- PHOTO GALLERY SECTION -->
+    <!-- Gallery -->
     <section class="gallery-section">
         <h3 class="gallery-title">Nuestros Platillos</h3>
-        <!-- Swiper -->
         <div class="swiper mySwiper">
             <div class="swiper-wrapper" id="gallery-wrapper">
-                <!-- Javascript will inject images here -->
+                <!-- Javascript will inject images -->
             </div>
             <div class="swiper-pagination"></div>
         </div>
         <p class="gallery-note"><i class="fas fa-search-plus"></i> Toca una imagen para ampliar</p>
     </section>
 
-    <!-- Menu Container -->
+    <!-- Menu -->
     <main class="menu-container" id="menu-list">
-        <div class="loading">
-            <i class="fas fa-fire fa-spin"></i> Cargando menú...
-        </div>
+        <div class="loading"><i class="fas fa-fire fa-spin"></i> Cargando menú...</div>
     </main>
 
-    <!-- Sticky Cart Button -->
+    <!-- Cart Button -->
     <div class="cart-floater" id="cart-floater" onclick="openCart()">
         <div class="cart-info">
             <span class="count-badge" id="cart-count">0</span>
@@ -110,44 +77,31 @@
                 <h2>Tu Pedido</h2>
                 <button class="close-btn" onclick="closeCart()"><i class="fas fa-times"></i></button>
             </div>
-            
             <div class="cart-items-list" id="cart-items">
                 <p class="empty-msg">Tu carrito está vacío.</p>
             </div>
-
             <div class="modal-footer">
-                <div class="total-row">
-                    <span>Total:</span>
-                    <span id="modal-total">$0</span>
-                </div>
-                <button class="whatsapp-btn" onclick="sendOrder()">
-                    <i class="fab fa-whatsapp"></i> ENVIAR PEDIDO
-                </button>
+                <div class="total-row"><span>Total:</span><span id="modal-total">$0</span></div>
+                <button class="whatsapp-btn" onclick="sendOrder()"><i class="fab fa-whatsapp"></i> ENVIAR PEDIDO</button>
             </div>
         </div>
     </div>
 
-    <!-- Lightbox Modal (For Zooming Images) -->
+    <!-- Lightbox -->
     <div class="lightbox" id="lightbox" onclick="closeLightbox()">
         <span class="lightbox-close">&times;</span>
         <img class="lightbox-content" id="lightbox-img">
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-<!-- Admin Login Button -->
+    <!-- ADMIN UI ELEMENTS -->
     <button id="admin-login-btn">Admin</button>
+    <div id="admin-add-btn" class="floating-add-btn" onclick="openAdminModal()"><i class="fas fa-plus"></i></div>
 
-    <!-- Admin Floating Add Button -->
-    <div id="admin-add-btn" class="floating-add-btn" onclick="openAdminModal()">
-        <i class="fas fa-plus"></i>
-    </div>
-
-    <!-- Admin Login Modal -->
+    <!-- Login Modal -->
     <div class="modal-overlay" id="login-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Admin Access</h2>
+                <h2>Acceso Admin</h2>
                 <button class="close-btn" onclick="document.getElementById('login-modal').classList.remove('open')">&times;</button>
             </div>
             <div style="padding: 20px;">
@@ -167,26 +121,20 @@
             </div>
             <div style="padding: 20px; overflow-y: auto;">
                 <input type="hidden" id="edit-id">
-                
                 <label class="option-label">Nombre</label>
                 <input type="text" id="edit-name" class="custom-select" style="margin-bottom:15px">
-
                 <label class="option-label">Precio</label>
                 <input type="number" id="edit-price" class="custom-select" style="margin-bottom:15px">
-
                 <label class="option-label">Descripción</label>
                 <textarea id="edit-desc" class="custom-select" rows="3" style="margin-bottom:15px"></textarea>
-
                 <label class="option-label">Categoría</label>
                 <select id="edit-section" class="custom-select" style="margin-bottom:15px">
                     <option value="combos">Combos Bongless</option>
                     <option value="especiales">Especiales</option>
                     <option value="ordenes">Ordenes Extra</option>
                 </select>
-
                 <label class="option-label">Link de la Foto (URL)</label>
                 <input type="text" id="edit-img" class="custom-select" placeholder="https://..." style="margin-bottom:15px">
-                
                 <button onclick="saveItem()" class="whatsapp-btn">GUARDAR CAMBIOS</button>
             </div>
         </div>
@@ -196,8 +144,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    
-    <!-- YOUR APP SCRIPT -->
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 </html>
