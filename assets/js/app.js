@@ -1,6 +1,5 @@
-// --- 1. FIREBASE CONFIGURATION ---
-// PASTE YOUR KEYS INSIDE THE BRACKETS BELOW.
-// DO NOT PASTE ANY LINES THAT SAY "import ..."
+// --- 1. FIREBASE CONFIG ---
+// PASTE YOUR KEYS HERE. (Do not paste 'import' lines!)
 const firebaseConfig = {
   apiKey: "AIzaSyBOvsein855aMcyGkw4GTkZ3UD_j-36QGQ",
   authDomain: "bongless2020.firebaseapp.com",
@@ -10,24 +9,39 @@ const firebaseConfig = {
   appId: "1:959363193575:web:40e71b7169bdcdcac46042"
 };
 
-// --- 2. INITIALIZE FIREBASE (COMPAT MODE) ---
-// This checks if Firebase is loaded before running to prevent crashes
+// Initialize Firebase safely
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
     var auth = firebase.auth();
 } else {
-    console.error("Firebase SDK not loaded. Check index.html");
+    console.error("Firebase not loaded.");
 }
 
-// --- 3. VARIABLES ---
+// --- 2. GLOBAL VARIABLES ---
 let isAdmin = false;
 let cart = [];
 let menuData = [];
 
+// --- 3. DATA BACKUP (THE ORIGINAL MENU) ---
+// This allows us to restore the menu if the database is empty.
+const ORIGINAL_MENU = [
+    {section: "combos", name: "PA'L ANTOJO", price: 160, desc: "250grs de boneless, papas fritas, aderezos y vegetales."},
+    {section: "combos", name: "PA'QUE DISFRUTES", price: 200, desc: "200grs de boneless, 200grs de papas fritas, bañado en salsa chipotle."},
+    {section: "combos", name: "PA'QUE PRUEBES", price: 220, desc: "300grs de boneless, papas, aros de cebolla."},
+    {section: "combos", name: "PA'LOS DEMAS", price: 260, desc: "500grs de boneless, papas fritas, aderezos."},
+    {section: "combos", name: "PA'QUE TE HARTES", price: 520, desc: "1kg de boneless, papas, aros, vegetales."},
+    {section: "combos", name: "PA'L ANTOJO ALITAS", price: 180, desc: "10pz de alitas, papas fritas, aderezos."},
+    {section: "especiales", name: "PA'QUE TE MANCHES", price: 130, desc: "Papas fritas cubiertas de queso cheddar con tocino."},
+    {section: "especiales", name: "BOWL-LESS", price: 200, desc: "Lechuga romana con boneless, tomate cherry y parmesano."},
+    {section: "ordenes", name: "Orden Papas Fritas", price: 80, desc: "Orden individual."},
+    {section: "ordenes", name: "Orden Aros de Cebolla", price: 100, desc: "Aros empanizados."},
+    {section: "ordenes", name: "Dedos de Queso (6pz)", price: 120, desc: "Con aderezo."},
+    {section: "ordenes", name: "Orden Papas Gajo", price: 120, desc: "Sazonadas."}
+];
+
 // --- 4. STARTUP ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Only run if Firebase works
     if (typeof auth !== 'undefined') {
         setupAuthListener();
         loadMenu();
@@ -35,17 +49,16 @@ document.addEventListener('DOMContentLoaded', () => {
     setupGallery();
 });
 
-// --- 5. AUTHENTICATION (LOGIN) ---
+// --- 5. AUTH & ADMIN ---
 function setupAuthListener() {
     auth.onAuthStateChanged(user => {
         const adminBtn = document.getElementById('admin-login-btn');
         const addBtn = document.getElementById('admin-add-btn');
-        
         if (user) {
             isAdmin = true;
             if(adminBtn) adminBtn.innerText = "Salir";
             if(addBtn) addBtn.classList.add('visible');
-            loadMenu(); // Reload to show edit buttons
+            loadMenu(); 
         } else {
             isAdmin = false;
             if(adminBtn) adminBtn.innerText = "Admin";
@@ -55,7 +68,6 @@ function setupAuthListener() {
     });
 }
 
-// Admin Button Click
 const adminLoginBtn = document.getElementById('admin-login-btn');
 if(adminLoginBtn) {
     adminLoginBtn.onclick = () => {
@@ -72,12 +84,12 @@ function loginAdmin() {
         .catch(e => alert("Error: " + e.message));
 }
 
-// --- 6. LOAD MENU FROM DATABASE ---
+// --- 6. MENU LOGIC ---
 function loadMenu() {
     const container = document.getElementById('menu-list');
     
     // Only show loading if empty
-    if(container.innerHTML.trim() === "") {
+    if(!container.querySelector('.menu-section')) {
         container.innerHTML = '<div class="loading"><i class="fas fa-fire fa-spin"></i> Cargando menú...</div>';
     }
 
@@ -89,43 +101,55 @@ function loadMenu() {
             const item = doc.data();
             item.id = doc.id;
             menuData.push(item);
-            
-            // Assign to section (default to combos if missing)
             const sec = item.section || 'combos';
-            if (sections[sec]) {
-                sections[sec].push(item);
-            }
+            if (sections[sec]) sections[sec].push(item);
         });
 
-        // Handle Empty Menu
+        // HANDLE EMPTY DB: Show button to Admin to restore data
         if(menuData.length === 0) {
-             container.innerHTML = '<div class="loading" style="color:white">Menú vacío. (Entra como Admin para agregar)</div>';
+             if(isAdmin) {
+                 container.innerHTML = `
+                    <div class="loading" style="color:white">
+                        <p>El menú está vacío.</p>
+                        <button onclick="uploadDefaultMenu()" class="btn-add" style="margin-top:10px; background:orange;">CARGAR MENÚ ORIGINAL</button>
+                    </div>`;
+             } else {
+                 container.innerHTML = '<div class="loading" style="color:white">Menú no disponible.</div>';
+             }
              return;
         }
 
         renderMenuHTML(sections);
     }).catch(error => {
         console.error("Error loading menu:", error);
-        container.innerHTML = '<div class="loading">Error de conexión. Verifica la consola.</div>';
+        container.innerHTML = '<div class="loading">Error de conexión.</div>';
     });
+}
+
+function uploadDefaultMenu() {
+    if(!confirm("¿Subir el menú original a la base de datos?")) return;
+    
+    const batch = db.batch();
+    ORIGINAL_MENU.forEach((item) => {
+        const docRef = db.collection("menu").doc(); // random ID
+        batch.set(docRef, item);
+    });
+    
+    batch.commit().then(() => {
+        alert("Menú restaurado!");
+        loadMenu();
+    }).catch(e => alert("Error: " + e.message));
 }
 
 function renderMenuHTML(sections) {
     const container = document.getElementById('menu-list');
     let html = '';
-
-    const titles = { 
-        combos: "Combos Bongless", 
-        especiales: "Especiales", 
-        ordenes: "Ordenes Extra" 
-    };
+    const titles = { combos: "Combos Bongless", especiales: "Especiales", ordenes: "Ordenes Extra" };
 
     for (const [key, items] of Object.entries(sections)) {
         if (items.length === 0 && !isAdmin) continue;
-
         html += `<h3 class="section-title">${titles[key] || key.toUpperCase()}</h3>`;
         html += `<div class="menu-section">`;
-
         items.forEach(item => {
             let adminBtns = '';
             if (isAdmin) {
@@ -135,15 +159,16 @@ function renderMenuHTML(sections) {
                     <button class="btn-delete" onclick="deleteItem('${item.id}')">Borrar</button>
                 </div>`;
             }
-
-            // Image Logic
-            const imgDisplay = item.imageUrl 
-                ? `<img src="${item.imageUrl}" onclick="openLightbox('${item.imageUrl}')" style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:10px; cursor:zoom-in;">` 
-                : '';
+            // If no image URL, check if we have a local asset match (simple mapping)
+            let imgSrc = item.imageUrl || ""; 
+            let imgTag = "";
+            if(imgSrc) {
+                imgTag = `<img src="${imgSrc}" onclick="openLightbox('${imgSrc}')" style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:10px; cursor:zoom-in;">`;
+            }
 
             html += `
             <div class="item-card">
-                ${imgDisplay}
+                ${imgTag}
                 <div class="item-header">
                     <span class="item-name">${item.name}</span>
                     <span class="item-price">$${item.price}</span>
@@ -153,13 +178,12 @@ function renderMenuHTML(sections) {
                 ${adminBtns}
             </div>`;
         });
-
         html += `</div>`;
     }
     container.innerHTML = html;
 }
 
-// --- 7. ADMIN FUNCTIONS (ADD/EDIT/DELETE) ---
+// --- 7. ADMIN EDIT/SAVE ---
 function openAdminModal() {
     document.getElementById('edit-id').value = "";
     document.getElementById('edit-name').value = "";
@@ -173,14 +197,12 @@ function openAdminModal() {
 function openEditModal(id) {
     const item = menuData.find(i => i.id === id);
     if (!item) return;
-
     document.getElementById('edit-id').value = id;
     document.getElementById('edit-name').value = item.name;
     document.getElementById('edit-price').value = item.price;
     document.getElementById('edit-desc').value = item.desc;
     document.getElementById('edit-section').value = item.section;
     document.getElementById('edit-img').value = item.imageUrl || "";
-    
     document.getElementById('modal-title').innerText = "Editar Platillo";
     document.getElementById('item-modal').classList.add('open');
 }
@@ -209,79 +231,59 @@ function saveItem() {
 }
 
 function deleteItem(id) {
-    if (confirm("¿Borrar este platillo para siempre?")) {
+    if (confirm("¿Borrar este platillo?")) {
         db.collection("menu").doc(id).delete().then(() => loadMenu());
     }
 }
 
-// --- 8. CART FUNCTIONS ---
+// --- 8. CART ---
 function addToCart(id, name, price) {
     const existing = cart.find(i => i.id === id);
     if (existing) existing.qty++;
     else cart.push({ id, name, price, qty: 1 });
     updateCartUI();
 }
-
 function updateCartUI() {
     const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
     const count = cart.reduce((acc, item) => acc + item.qty, 0);
-    
     document.getElementById('cart-count').innerText = count;
     document.getElementById('cart-total').innerText = "$" + total;
     document.getElementById('modal-total').innerText = "$" + total;
-    
     const floater = document.getElementById('cart-floater');
     if (count > 0) floater.classList.add('active');
     else floater.classList.remove('active');
-    
     renderCartList();
 }
-
 function renderCartList() {
     const list = document.getElementById('cart-items');
-    if (cart.length === 0) {
-        list.innerHTML = '<p class="empty-msg">Tu carrito está vacío.</p>';
-        return;
-    }
-    
+    if (cart.length === 0) { list.innerHTML = '<p class="empty-msg">Tu carrito está vacío.</p>'; return; }
     list.innerHTML = cart.map((item, index) => `
         <div class="cart-item-row">
-            <div class="item-details-left">
-                <h4>${item.name}</h4>
-                <p>Cantidad: ${item.qty}</p>
-            </div>
-            <div class="item-price-right">
-                <span class="price">$${item.price * item.qty}</span>
-                <button class="delete-btn" onclick="removeFromCart(${index})">Eliminar</button>
-            </div>
+            <div class="item-details-left"><h4>${item.name}</h4><p>Cantidad: ${item.qty}</p></div>
+            <div class="item-price-right"><span class="price">$${item.price * item.qty}</span><button class="delete-btn" onclick="removeFromCart(${index})">Eliminar</button></div>
         </div>
     `).join('');
 }
-
-function removeFromCart(index) {
-    cart.splice(index, 1);
-    updateCartUI();
-}
-
+function removeFromCart(index) { cart.splice(index, 1); updateCartUI(); }
 function openCart() { document.getElementById('cart-modal').classList.add('open'); }
 function closeCart() { document.getElementById('cart-modal').classList.remove('open'); }
-
 function sendOrder() {
     if (cart.length === 0) return;
     let msg = "Hola Bongless 2020, quiero pedir:\n\n";
-    cart.forEach(item => {
-        msg += `▪ ${item.qty}x ${item.name} - $${item.price * item.qty}\n`;
-    });
+    cart.forEach(item => { msg += `▪ ${item.qty}x ${item.name} - $${item.price * item.qty}\n`; });
     const total = document.getElementById('modal-total').innerText;
     msg += `\n*TOTAL: ${total}*`;
     window.open(`https://wa.me/5216861969928?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// --- 9. GALLERY & LIGHTBOX (The missing parts) ---
+// --- 9. GALLERY & LIGHTBOX ---
 function setupGallery() {
+    // You can restore your static images here manually or add them to DB later
+    // For now, we use a placeholder or your logo to ensure it doesn't look broken
     const wrapper = document.getElementById('gallery-wrapper');
     if(!wrapper) return;
-    // Static placeholder images (or you can add logic to pull from DB)
+    
+    // NOTE: Ensure these images exist in your assets folder!
     const images = ['assets/images/logo.png']; 
     
     wrapper.innerHTML = images.map(src => 
@@ -295,20 +297,14 @@ function setupGallery() {
     });
 }
 
-// Lightbox Logic (Fixes the second error)
 function openLightbox(src) {
-    const lightbox = document.getElementById('lightbox');
+    const lb = document.getElementById('lightbox');
     const img = document.getElementById('lightbox-img');
-    if(lightbox && img) {
-        img.src = src;
-        lightbox.classList.add('active');
-    }
+    if(lb && img) { img.src = src; lb.classList.add('active'); }
 }
-
 function closeLightbox() {
-    const lightbox = document.getElementById('lightbox');
-    if(lightbox) lightbox.classList.remove('active');
+    const lb = document.getElementById('lightbox');
+    if(lb) lb.classList.remove('active');
 }
-// Expose to window so HTML onclick works
-window.closeLightbox = closeLightbox;
 window.openLightbox = openLightbox;
+window.closeLightbox = closeLightbox;
