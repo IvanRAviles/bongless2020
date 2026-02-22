@@ -3,8 +3,8 @@
     --bg-card: #141414;
     --text-primary: #ffffff;
     --text-secondary: #a0a0a0;
-    --brand-orange: #FF5500;
-    --brand-gold: #D4AF37;
+    --brand-orange: #FF5500; /* Fuego */
+    --brand-gold: #D4AF37;   /* Gold */
     --success: #25D366;
     --border: #2a2a2a;
     --radius: 12px;
@@ -28,7 +28,7 @@ a { text-decoration: none; color: inherit; }
 .brand-title-block { display: flex; flex-direction: column; align-items: center; line-height: 1; }
 .main-title { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 3rem; color: #fff; display: flex; align-items: center; }
 .fire-letter { color: var(--text-primary); display: flex; align-items: center; }
-.flame-icon { color: var(--brand-orange); font-size: 2.2rem; margin: 0 2px 0 1px; }
+.flame-icon { color: var(--brand-orange); font-size: 2.2rem; margin: 0 2px 0 1px; text-shadow: 0 0 10px rgba(255, 85, 0, 0.8); }
 .year-stack { display: flex; flex-direction: column; font-size: 1.1rem; line-height: 0.85; margin-left: 4px; font-weight: 700; }
 .sub-title { font-family: 'Oswald', sans-serif; color: var(--brand-gold); font-size: 0.9rem; letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; }
 
@@ -36,29 +36,30 @@ a { text-decoration: none; color: inherit; }
 .info-card { text-align: center; font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px; padding: 0 15px; }
 .info-line { margin-bottom: 6px; }
 .info-line i { color: var(--brand-gold); margin-right: 5px; }
+.info-card a { color: var(--text-primary); border-bottom: 1px dotted var(--brand-gold); }
 .socials { margin-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.social-link { display: flex; align-items: center; gap: 8px; color: var(--brand-gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 6px 15px; border-radius: 20px; }
+.social-link { display: flex; align-items: center; gap: 8px; color: var(--brand-gold); font-size: 0.95rem; border: 1px solid rgba(212, 175, 55, 0.3); padding: 6px 15px; border-radius: 20px; width: fit-content; }
+.social-link:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--brand-gold); }
 .status-badge { display: inline-block; background: rgba(0, 255, 0, 0.1); color: #00ff00; font-weight: bold; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-top: 15px; border: 1px solid rgba(0, 255, 0, 0.3); }
 
 /* --- MENU GRID --- */
-.menu-container { max-width: 1000px; margin: 0 auto; padding: 20px 15px; margin-top: 280px; }
+.menu-container { max-width: 1000px; margin: 0 auto; padding: 20px 15px; margin-top: 280px; } /* Added margin for fixed header */
 .menu-section { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-bottom: 30px; }
 .section-title { grid-column: 1 / -1; color: var(--brand-gold); text-transform: uppercase; font-family: 'Oswald', sans-serif; font-size: 1.5rem; font-weight: 700; border-bottom: 1px solid var(--brand-orange); padding-bottom: 5px; margin: 30px 0 15px; }
 
 /* CARD */
-.item-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; display: flex; flex-direction: column; }
+.item-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; position: relative; overflow: hidden; height: 100%; display: flex; flex-direction: column; }
 .item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
 .item-name { font-weight: 700; font-size: 1.1rem; color: #fff; }
-.item-price { font-weight: 800; color: var(--brand-gold); font-size: 1.15rem; }
+.item-price { font-weight: 800; color: var(--brand-gold); font-size: 1.15rem; white-space: nowrap; }
 .item-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 12px; flex-grow: 1; }
-.btn-add { width: 100%; background: #fff; color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: 800; font-size: 1rem; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
-.btn-add:active { background: var(--brand-gold); }
+.btn-add { width: 100%; background: #fff; color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: 800; font-size: 1rem; margin-top: 15px; cursor: pointer; transition: background 0.2s; text-transform: uppercase; }
+.btn-add:active { background: var(--brand-gold); transform: scale(0.98); }
 
-/* --- CART & MODALS --- */
-.cart-floater { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; background: var(--brand-gold); color: #000; padding: 15px 25px; border-radius: 50px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 20px rgba(0,0,0,0.6); z-index: 1000; font-weight: 800; opacity: 0; pointer-events: none; transition: all 0.3s; }
+/* CART & MODAL */
+.cart-floater { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; background: var(--brand-gold); color: #000; padding: 15px 25px; border-radius: 50px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 20px rgba(0,0,0,0.6); cursor: pointer; z-index: 1000; font-weight: 800; opacity: 0; pointer-events: none; transition: all 0.3s; }
 .cart-floater.active { opacity: 1; pointer-events: all; bottom: 25px; }
 .count-badge { background: #000; color: var(--brand-gold); padding: 2px 8px; border-radius: 10px; margin-right: 8px; }
-
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: flex-end; backdrop-filter: blur(5px); }
 .modal-overlay.open { display: flex; }
 .modal-content { background: #1a1a1a; width: 100%; max-width: 600px; margin: 0 auto; border-radius: 20px 20px 0 0; max-height: 85vh; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; }
@@ -71,28 +72,35 @@ a { text-decoration: none; color: inherit; }
 .delete-btn { color: #ff4444; font-size: 0.9rem; background: none; border: none; cursor: pointer; }
 .modal-footer { padding: 20px; border-top: 1px solid #333; background: #111; }
 .total-row { display: flex; justify-content: space-between; color: #fff; font-size: 1.3rem; font-weight: bold; margin-bottom: 15px; }
-.whatsapp-btn { width: 100%; background: var(--success); color: #fff; border: none; padding: 15px; border-radius: 12px; font-size: 1.1rem; font-weight: 800; cursor: pointer; }
+.whatsapp-btn { width: 100%; background: var(--success); color: #fff; border: none; padding: 15px; border-radius: 12px; font-size: 1.1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.loading { text-align: center; padding: 40px; color: var(--text-secondary); }
 
-/* --- GALLERY --- */
-.gallery-section { max-width: 800px; margin: 20px auto 10px; padding: 0 15px; margin-top: 260px; } 
-/* Adjusted margin so it doesn't hide behind header */
+/* GALLERY */
+.gallery-section { max-width: 800px; margin: 20px auto 10px; padding: 0 15px; margin-top: 260px; }
 .gallery-title { color: var(--brand-gold); text-transform: uppercase; font-family: 'Oswald', sans-serif; font-size: 1rem; font-weight: 800; margin-bottom: 10px; text-align: center; }
 .swiper { width: 100%; height: 250px; border-radius: var(--radius); border: 1px solid var(--border); background: #000; }
-.swiper-slide { background: #000; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-.swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
+.swiper-slide { text-align: center; background: #000; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+.swiper-slide img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .swiper-pagination-bullet { background: #fff; opacity: 0.5; }
 .swiper-pagination-bullet-active { background: var(--brand-orange); opacity: 1; }
+.gallery-note { text-align: center; font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; }
 
-/* --- ADMIN EXTRAS --- */
+/* LIGHTBOX */
+.lightbox { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.95); backdrop-filter: blur(5px); justify-content: center; align-items: center; }
+.lightbox.active { display: flex; animation: fadeIn 0.3s; }
+.lightbox-content { margin: auto; display: block; max-width: 95%; max-height: 95%; border-radius: 8px; border: 2px solid var(--brand-gold); }
+.lightbox-close { position: absolute; top: 15px; right: 25px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 3001; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* --- ADMIN NEW STYLES --- */
 #admin-login-btn { position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.5); color: #555; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.7rem; z-index: 9999; }
 .admin-controls { display: flex; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333; }
 .btn-edit { background: var(--brand-gold); color: #000; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1; }
 .btn-delete { background: #ff4444; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1; }
-.custom-select { width: 100%; background: #222; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 6px; font-size: 0.95rem; outline: none; }
-.option-label { display: block; font-size: 0.8rem; color: var(--brand-orange); margin-bottom: 4px; font-weight: bold; }
-
 .floating-add-btn { position: fixed; bottom: 80px; right: 20px; background: var(--brand-orange); color: white; width: 60px; height: 60px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 15px rgba(255, 85, 0, 0.5); cursor: pointer; z-index: 1000; border: 2px solid #fff; }
 .floating-add-btn.visible { display: flex; }
+.custom-select { width: 100%; background: #222; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 6px; font-size: 0.95rem; outline: none; }
+.option-label { display: block; font-size: 0.8rem; color: var(--brand-orange); margin-bottom: 4px; font-weight: bold; }
 
 @media (min-width: 768px) {
     .modal-overlay { align-items: center; justify-content: center; }
