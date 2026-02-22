@@ -1,9 +1,6 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+// --- 1. FIREBASE CONFIGURATION ---
+// PASTE YOUR KEYS INSIDE THE BRACKETS BELOW.
+// DO NOT PASTE ANY LINES THAT SAY "import ..."
 const firebaseConfig = {
   apiKey: "AIzaSyBOvsein855aMcyGkw4GTkZ3UD_j-36QGQ",
   authDomain: "bongless2020.firebaseapp.com",
@@ -13,57 +10,59 @@ const firebaseConfig = {
   appId: "1:959363193575:web:40e71b7169bdcdcac46042"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-// Initialize Firebase
-try {
+// --- 2. INITIALIZE FIREBASE (COMPAT MODE) ---
+// This checks if Firebase is loaded before running to prevent crashes
+if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
-} catch(e) {
-    console.error("Firebase failed to init. Did you paste the API keys?", e);
+    var db = firebase.firestore();
+    var auth = firebase.auth();
+} else {
+    console.error("Firebase SDK not loaded. Check index.html");
 }
 
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-// --- STATE MANAGEMENT ---
+// --- 3. VARIABLES ---
 let isAdmin = false;
 let cart = [];
 let menuData = [];
 
-// --- INITIALIZATION ---
+// --- 4. STARTUP ---
 document.addEventListener('DOMContentLoaded', () => {
-    setupAuthListener();
-    loadMenu();
+    // Only run if Firebase works
+    if (typeof auth !== 'undefined') {
+        setupAuthListener();
+        loadMenu();
+    }
     setupGallery();
 });
 
-// --- AUTHENTICATION ---
+// --- 5. AUTHENTICATION (LOGIN) ---
 function setupAuthListener() {
     auth.onAuthStateChanged(user => {
+        const adminBtn = document.getElementById('admin-login-btn');
+        const addBtn = document.getElementById('admin-add-btn');
+        
         if (user) {
             isAdmin = true;
-            document.getElementById('admin-login-btn').innerText = "Salir";
-            const addBtn = document.getElementById('admin-add-btn');
+            if(adminBtn) adminBtn.innerText = "Salir";
             if(addBtn) addBtn.classList.add('visible');
             loadMenu(); // Reload to show edit buttons
         } else {
             isAdmin = false;
-            document.getElementById('admin-login-btn').innerText = "Admin";
-            const addBtn = document.getElementById('admin-add-btn');
+            if(adminBtn) adminBtn.innerText = "Admin";
             if(addBtn) addBtn.classList.remove('visible');
             loadMenu();
         }
     });
 }
 
-document.getElementById('admin-login-btn').onclick = () => {
-    if (isAdmin) {
-        auth.signOut();
-    } else {
-        document.getElementById('login-modal').classList.add('open');
-    }
-};
+// Admin Button Click
+const adminLoginBtn = document.getElementById('admin-login-btn');
+if(adminLoginBtn) {
+    adminLoginBtn.onclick = () => {
+        if (isAdmin) auth.signOut();
+        else document.getElementById('login-modal').classList.add('open');
+    };
+}
 
 function loginAdmin() {
     const email = document.getElementById('admin-email').value;
@@ -73,10 +72,14 @@ function loginAdmin() {
         .catch(e => alert("Error: " + e.message));
 }
 
-// --- MENU LOADING ---
+// --- 6. LOAD MENU FROM DATABASE ---
 function loadMenu() {
     const container = document.getElementById('menu-list');
-    container.innerHTML = '<div class="loading"><i class="fas fa-fire fa-spin"></i> Cargando menú...</div>';
+    
+    // Only show loading if empty
+    if(container.innerHTML.trim() === "") {
+        container.innerHTML = '<div class="loading"><i class="fas fa-fire fa-spin"></i> Cargando menú...</div>';
+    }
 
     db.collection("menu").get().then((querySnapshot) => {
         const sections = { combos: [], especiales: [], ordenes: [] };
@@ -86,23 +89,24 @@ function loadMenu() {
             const item = doc.data();
             item.id = doc.id;
             menuData.push(item);
-            // Default section if missing
+            
+            // Assign to section (default to combos if missing)
             const sec = item.section || 'combos';
             if (sections[sec]) {
                 sections[sec].push(item);
             }
         });
 
-        // If database is empty (first run), showing nothing is fine
+        // Handle Empty Menu
         if(menuData.length === 0) {
-             container.innerHTML = '<div class="loading">Menú vacío. (Admin: Agrega platillos)</div>';
+             container.innerHTML = '<div class="loading" style="color:white">Menú vacío. (Entra como Admin para agregar)</div>';
              return;
         }
 
         renderMenuHTML(sections);
     }).catch(error => {
         console.error("Error loading menu:", error);
-        container.innerHTML = '<p class="loading">Error cargando el menú. Revisa la consola (F12) para ver si falta la API Key.</p>';
+        container.innerHTML = '<div class="loading">Error de conexión. Verifica la consola.</div>';
     });
 }
 
@@ -123,7 +127,31 @@ function renderMenuHTML(sections) {
         html += `<div class="menu-section">`;
 
         items.forEach(item => {
-            html += createItemCard(item);
+            let adminBtns = '';
+            if (isAdmin) {
+                adminBtns = `
+                <div class="admin-controls">
+                    <button class="btn-edit" onclick="openEditModal('${item.id}')">Editar</button>
+                    <button class="btn-delete" onclick="deleteItem('${item.id}')">Borrar</button>
+                </div>`;
+            }
+
+            // Image Logic
+            const imgDisplay = item.imageUrl 
+                ? `<img src="${item.imageUrl}" onclick="openLightbox('${item.imageUrl}')" style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:10px; cursor:zoom-in;">` 
+                : '';
+
+            html += `
+            <div class="item-card">
+                ${imgDisplay}
+                <div class="item-header">
+                    <span class="item-name">${item.name}</span>
+                    <span class="item-price">$${item.price}</span>
+                </div>
+                <p class="item-desc">${item.desc}</p>
+                <button class="btn-add" onclick="addToCart('${item.id}', '${item.name}', ${item.price})">Agregar</button>
+                ${adminBtns}
+            </div>`;
         });
 
         html += `</div>`;
@@ -131,34 +159,7 @@ function renderMenuHTML(sections) {
     container.innerHTML = html;
 }
 
-function createItemCard(item) {
-    let adminBtns = '';
-    if (isAdmin) {
-        adminBtns = `
-        <div class="admin-controls">
-            <button class="btn-edit" onclick="openEditModal('${item.id}')">Editar</button>
-            <button class="btn-delete" onclick="deleteItem('${item.id}')">Borrar</button>
-        </div>`;
-    }
-
-    // Use placeholder image if none exists
-    // You can paste any image URL into the admin panel later
-    const imgDisplay = item.imageUrl ? `<img src="${item.imageUrl}" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:10px;">` : '';
-
-    return `
-    <div class="item-card">
-        ${imgDisplay}
-        <div class="item-header">
-            <span class="item-name">${item.name}</span>
-            <span class="item-price">$${item.price}</span>
-        </div>
-        <p class="item-desc">${item.desc}</p>
-        <button class="btn-add" onclick="addToCart('${item.id}', '${item.name}', ${item.price})">Agregar</button>
-        ${adminBtns}
-    </div>`;
-}
-
-// --- ADMIN ACTIONS ---
+// --- 7. ADMIN FUNCTIONS (ADD/EDIT/DELETE) ---
 function openAdminModal() {
     document.getElementById('edit-id').value = "";
     document.getElementById('edit-name').value = "";
@@ -208,19 +209,16 @@ function saveItem() {
 }
 
 function deleteItem(id) {
-    if (confirm("¿Estás seguro de borrar este platillo?")) {
+    if (confirm("¿Borrar este platillo para siempre?")) {
         db.collection("menu").doc(id).delete().then(() => loadMenu());
     }
 }
 
-// --- CART LOGIC ---
+// --- 8. CART FUNCTIONS ---
 function addToCart(id, name, price) {
     const existing = cart.find(i => i.id === id);
-    if (existing) {
-        existing.qty++;
-    } else {
-        cart.push({ id, name, price, qty: 1 });
-    }
+    if (existing) existing.qty++;
+    else cart.push({ id, name, price, qty: 1 });
     updateCartUI();
 }
 
@@ -279,23 +277,15 @@ function sendOrder() {
     window.open(`https://wa.me/5216861969928?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// --- GALLERY (RESTORED) ---
+// --- 9. GALLERY & LIGHTBOX (The missing parts) ---
 function setupGallery() {
     const wrapper = document.getElementById('gallery-wrapper');
     if(!wrapper) return;
-
-    // Use placeholder URLs if you don't have files. 
-    // IF YOU HAVE FILES, change these paths.
-    const images = [
-        'assets/images/logo.png', // Temporary placeholder
-        'assets/images/logo.png'  // Temporary placeholder
-    ];
-    
-    // Attempt to load local images if they exist in your folder structure
-    // If you deleted the folder, these will break.
+    // Static placeholder images (or you can add logic to pull from DB)
+    const images = ['assets/images/logo.png']; 
     
     wrapper.innerHTML = images.map(src => 
-        `<div class="swiper-slide"><img src="${src}" alt="Gallery"></div>`
+        `<div class="swiper-slide"><img src="${src}" onclick="openLightbox('${src}')"></div>`
     ).join('');
 
     new Swiper(".mySwiper", {
@@ -304,3 +294,21 @@ function setupGallery() {
         autoplay: { delay: 3000 }
     });
 }
+
+// Lightbox Logic (Fixes the second error)
+function openLightbox(src) {
+    const lightbox = document.getElementById('lightbox');
+    const img = document.getElementById('lightbox-img');
+    if(lightbox && img) {
+        img.src = src;
+        lightbox.classList.add('active');
+    }
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    if(lightbox) lightbox.classList.remove('active');
+}
+// Expose to window so HTML onclick works
+window.closeLightbox = closeLightbox;
+window.openLightbox = openLightbox;
