@@ -1,5 +1,9 @@
-// --- 1. PASTE YOUR FIREBASE CONFIG HERE ---
-// (Replace the lines below with the code you copied from Firebase)
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBOvsein855aMcyGkw4GTkZ3UD_j-36QGQ",
   authDomain: "bongless2020.firebaseapp.com",
@@ -10,7 +14,15 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+
+// Initialize Firebase
+try {
+    firebase.initializeApp(firebaseConfig);
+} catch(e) {
+    console.error("Firebase failed to init. Did you paste the API keys?", e);
+}
+
 const db = firebase.firestore();
 const auth = firebase.auth();
 
@@ -32,12 +44,14 @@ function setupAuthListener() {
         if (user) {
             isAdmin = true;
             document.getElementById('admin-login-btn').innerText = "Salir";
-            document.getElementById('admin-add-btn').classList.add('visible');
-            loadMenu(); // Reload menu to show edit buttons
+            const addBtn = document.getElementById('admin-add-btn');
+            if(addBtn) addBtn.classList.add('visible');
+            loadMenu(); // Reload to show edit buttons
         } else {
             isAdmin = false;
             document.getElementById('admin-login-btn').innerText = "Admin";
-            document.getElementById('admin-add-btn').classList.remove('visible');
+            const addBtn = document.getElementById('admin-add-btn');
+            if(addBtn) addBtn.classList.remove('visible');
             loadMenu();
         }
     });
@@ -59,7 +73,7 @@ function loginAdmin() {
         .catch(e => alert("Error: " + e.message));
 }
 
-// --- MENU LOADING (FROM FIREBASE) ---
+// --- MENU LOADING ---
 function loadMenu() {
     const container = document.getElementById('menu-list');
     container.innerHTML = '<div class="loading"><i class="fas fa-fire fa-spin"></i> Cargando menú...</div>';
@@ -72,15 +86,23 @@ function loadMenu() {
             const item = doc.data();
             item.id = doc.id;
             menuData.push(item);
-            if (sections[item.section]) {
-                sections[item.section].push(item);
+            // Default section if missing
+            const sec = item.section || 'combos';
+            if (sections[sec]) {
+                sections[sec].push(item);
             }
         });
+
+        // If database is empty (first run), showing nothing is fine
+        if(menuData.length === 0) {
+             container.innerHTML = '<div class="loading">Menú vacío. (Admin: Agrega platillos)</div>';
+             return;
+        }
 
         renderMenuHTML(sections);
     }).catch(error => {
         console.error("Error loading menu:", error);
-        container.innerHTML = '<p class="loading">Error cargando el menú.</p>';
+        container.innerHTML = '<p class="loading">Error cargando el menú. Revisa la consola (F12) para ver si falta la API Key.</p>';
     });
 }
 
@@ -119,11 +141,13 @@ function createItemCard(item) {
         </div>`;
     }
 
-    // Check if item has options (You can add these manually in Firestore later if needed)
-    // For simplicity, we are defaulting to standard buttons
-    
+    // Use placeholder image if none exists
+    // You can paste any image URL into the admin panel later
+    const imgDisplay = item.imageUrl ? `<img src="${item.imageUrl}" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:10px;">` : '';
+
     return `
     <div class="item-card">
+        ${imgDisplay}
         <div class="item-header">
             <span class="item-name">${item.name}</span>
             <span class="item-price">$${item.price}</span>
@@ -136,7 +160,6 @@ function createItemCard(item) {
 
 // --- ADMIN ACTIONS ---
 function openAdminModal() {
-    // Clear fields for new item
     document.getElementById('edit-id').value = "";
     document.getElementById('edit-name').value = "";
     document.getElementById('edit-price').value = "";
@@ -190,7 +213,7 @@ function deleteItem(id) {
     }
 }
 
-// --- CART LOGIC (Simplified from your original) ---
+// --- CART LOGIC ---
 function addToCart(id, name, price) {
     const existing = cart.find(i => i.id === id);
     if (existing) {
@@ -247,29 +270,37 @@ function closeCart() { document.getElementById('cart-modal').classList.remove('o
 
 function sendOrder() {
     if (cart.length === 0) return;
-    
     let msg = "Hola Bongless 2020, quiero pedir:\n\n";
     cart.forEach(item => {
         msg += `▪ ${item.qty}x ${item.name} - $${item.price * item.qty}\n`;
     });
-    
     const total = document.getElementById('modal-total').innerText;
     msg += `\n*TOTAL: ${total}*`;
-    
     window.open(`https://wa.me/5216861969928?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// --- GALLERY (Swiper) ---
+// --- GALLERY (RESTORED) ---
 function setupGallery() {
-    // You can also move gallery images to Firebase later if you want
-    // For now, we keep the static logic or manual add
-    const swiperWrapper = document.getElementById('gallery-wrapper');
-    // Example static images - you can replace these with dynamic ones if you add a 'gallery' collection
+    const wrapper = document.getElementById('gallery-wrapper');
+    if(!wrapper) return;
+
+    // Use placeholder URLs if you don't have files. 
+    // IF YOU HAVE FILES, change these paths.
     const images = [
-        'assets/images/boneless1.jpg', // You need to ensure these files exist or use URLs
-        'assets/images/boneless2.jpg'
+        'assets/images/logo.png', // Temporary placeholder
+        'assets/images/logo.png'  // Temporary placeholder
     ];
     
-    // If you don't have images locally, the swiper might look empty. 
-    // You can populate this from menuData if items have imageUrls.
+    // Attempt to load local images if they exist in your folder structure
+    // If you deleted the folder, these will break.
+    
+    wrapper.innerHTML = images.map(src => 
+        `<div class="swiper-slide"><img src="${src}" alt="Gallery"></div>`
+    ).join('');
+
+    new Swiper(".mySwiper", {
+        pagination: { el: ".swiper-pagination", dynamicBullets: true },
+        loop: true,
+        autoplay: { delay: 3000 }
+    });
 }
