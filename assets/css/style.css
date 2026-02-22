@@ -59,7 +59,7 @@ a { text-decoration: none; color: inherit; }
     transform: scale(1.05); 
 }
 
-/* TEXT BRAND RECREATION (FIXED OVERLAP) */
+/* TEXT BRAND RECREATION */
 .brand-title-block {
     display: flex;
     flex-direction: column;
@@ -77,7 +77,6 @@ a { text-decoration: none; color: inherit; }
     align-items: center;
 }
 
-/* Updated: No longer absolutely positioned. Flame acts as the 'O' */
 .fire-letter {
     color: var(--text-primary);
     display: flex;
@@ -87,9 +86,8 @@ a { text-decoration: none; color: inherit; }
 .flame-icon {
     color: var(--brand-orange);
     font-size: 2.2rem;
-    margin: 0 2px 0 1px; /* Spacing between B and NGLESS */
+    margin: 0 2px 0 1px;
     text-shadow: 0 0 10px rgba(255, 85, 0, 0.8);
-    /* Removed absolute positioning so it doesn't overlap the B */
 }
 
 .year-stack {
@@ -116,6 +114,7 @@ a { text-decoration: none; color: inherit; }
     font-size: 0.9rem;
     color: var(--text-secondary);
     margin-top: 5px;
+    padding: 0 15px;
 }
 
 .info-line {
@@ -128,8 +127,39 @@ a { text-decoration: none; color: inherit; }
 }
 
 .info-card a { color: var(--text-primary); border-bottom: 1px dotted var(--brand-gold); }
-.socials { margin-top: 8px; font-size: 1.2rem; }
-.socials a { margin: 0 10px; color: var(--brand-gold); }
+
+/* Updated Social Links */
+.socials { 
+    margin-top: 15px; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--brand-gold);
+    font-size: 0.95rem;
+    text-decoration: none !important;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    padding: 6px 15px;
+    border-radius: 20px;
+    transition: all 0.2s;
+    width: fit-content;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3) !important;
+}
+
+.social-link:hover {
+    background: rgba(212, 175, 55, 0.1);
+    border-color: var(--brand-gold);
+}
+
+.social-link i {
+    font-size: 1.1rem;
+}
 
 .status-badge {
     display: inline-block;
@@ -139,27 +169,24 @@ a { text-decoration: none; color: inherit; }
     font-size: 0.75rem;
     padding: 2px 8px;
     border-radius: 4px;
-    margin-top: 5px;
+    margin-top: 15px;
     border: 1px solid rgba(0, 255, 0, 0.3);
 }
 
-/* --- MENU STYLES (UPDATED TO GRID) --- */
+/* --- MENU STYLES (GRID) --- */
 .menu-container {
-    max-width: 1000px; /* Increased max-width to fit multiple columns */
+    max-width: 1000px;
     margin: 0 auto;
     padding: 20px 15px;
 }
 
-/* This creates the grid layout */
 .menu-section {
     display: grid;
-    /* This magic line makes it 1 column on phone, 2 on tablet, 3 on desktop */
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 15px;
     margin-bottom: 30px;
 }
 
-/* Make title span the full width of the grid */
 .section-title {
     grid-column: 1 / -1;
     color: var(--brand-gold);
@@ -181,7 +208,7 @@ a { text-decoration: none; color: inherit; }
     padding: 15px;
     position: relative;
     overflow: hidden;
-    height: 100%; /* Makes cards same height in the row */
+    height: 100%;
     display: flex;
     flex-direction: column;
 }
