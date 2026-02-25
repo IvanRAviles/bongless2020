@@ -1,5 +1,5 @@
-// --- 1. FIREBASE CONFIG ---
-// PASTE YOUR KEYS INSIDE HERE (Do not use 'import')
+// --- 1. FIREBASE CONFIGURATION ---
+// PASTE YOUR KEYS HERE (Keep the structure exactly like this)
 const firebaseConfig = {
   apiKey: "AIzaSyBOvsein855aMcyGkw4GTkZ3UD_j-36QGQ",
   authDomain: "bongless2020.firebaseapp.com",
@@ -9,13 +9,13 @@ const firebaseConfig = {
   appId: "1:959363193575:web:40e71b7169bdcdcac46042"
 };
 
-// Initialize Firebase safely
+// Initialize Firebase Safely
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
     var auth = firebase.auth();
 } else {
-    console.error("Firebase not loaded.");
+    console.error("Firebase SDK not loaded.");
 }
 
 // --- 2. GLOBAL VARIABLES ---
@@ -23,35 +23,68 @@ let isAdmin = false;
 let cart = [];
 let menuData = [];
 
-// --- 3. STARTUP & SCROLL LISTENER ---
+// --- 3. ORIGINAL DATA (With Options Restored!) ---
+const ORIGINAL_MENU = [
+    {
+        section: "combos", name: "PA'L ANTOJO", price: 160, desc: "250grs de boneless, papas fritas, aderezos y vegetales.",
+        options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 30}]
+    },
+    {
+        section: "combos", name: "PA'QUE DISFRUTES", price: 200, desc: "200grs de boneless, 200grs de papas fritas, bañado en salsa chipotle.",
+        options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 40}]
+    },
+    {
+        section: "combos", name: "PA'QUE PRUEBES", price: 220, desc: "300grs de boneless, papas, aros de cebolla.",
+        options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 30}]
+    },
+    {
+        section: "combos", name: "PA'LOS DEMAS", price: 260, desc: "500grs de boneless, papas fritas, aderezos.",
+        options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 30}]
+    },
+    {
+        section: "combos", name: "PA'QUE TE HARTES", price: 520, desc: "1kg de boneless, papas, aros, vegetales.",
+        options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 40}, {name: "Extra Papas Gajo", price: 60}]
+    },
+    {
+        section: "combos", name: "PA'L ANTOJO ALITAS", price: 180, desc: "10pz de alitas, papas fritas, aderezos.",
+        options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 30}]
+    },
+    {
+        section: "especiales", name: "PA'QUE TE MANCHES", price: 130, desc: "Papas fritas cubiertas de queso cheddar con tocino.",
+        options: [{name: "Con Papas Fritas", price: 0}, {name: "Con Papas Gajo", price: 20}]
+    },
+    { section: "especiales", name: "BOWL-LESS", price: 200, desc: "Lechuga romana con boneless, tomate cherry y parmesano." },
+    { section: "ordenes", name: "Orden Papas Fritas", price: 80, desc: "Orden individual." },
+    { section: "ordenes", name: "Orden Aros de Cebolla", price: 100, desc: "Aros empanizados." },
+    { section: "ordenes", name: "Dedos de Queso (6pz)", price: 120, desc: "Con aderezo." },
+    { section: "ordenes", name: "Orden Papas Gajo", price: 120, desc: "Sazonadas." }
+];
+
+// --- 4. STARTUP ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Auth Listener
     if (typeof auth !== 'undefined') {
         setupAuthListener();
         loadMenu();
     }
-    // Gallery
     setupGallery();
+    setupScrollListener();
+});
 
-    // --- SCROLL LOGIC (HIDE HEADER) ---
-    // This makes the header disappear when you scroll down
+function setupScrollListener() {
     let lastScrollTop = 0;
     const header = document.querySelector(".main-header");
-    
     window.addEventListener("scroll", function() {
         let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         if (scrollTop > lastScrollTop && scrollTop > 100) {
-            // Scrolling DOWN -> Hide Header
             header.classList.add("header-hidden");
         } else {
-            // Scrolling UP -> Show Header
             header.classList.remove("header-hidden");
         }
         lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
     }, false);
-});
+}
 
-// --- 4. AUTH & ADMIN ---
+// --- 5. AUTH & ADMIN ---
 function setupAuthListener() {
     auth.onAuthStateChanged(user => {
         const adminBtn = document.getElementById('admin-login-btn');
@@ -86,10 +119,9 @@ function loginAdmin() {
         .catch(e => alert("Error: " + e.message));
 }
 
-// --- 5. MENU LOGIC ---
+// --- 6. MENU LOGIC ---
 function loadMenu() {
     const container = document.getElementById('menu-list');
-    
     if(!container.querySelector('.menu-section')) {
         container.innerHTML = '<div class="loading"><i class="fas fa-fire fa-spin"></i> Cargando menú...</div>';
     }
@@ -106,8 +138,17 @@ function loadMenu() {
             if (sections[sec]) sections[sec].push(item);
         });
 
+        // IF DB EMPTY: Show Restore Button
         if(menuData.length === 0) {
-             container.innerHTML = '<div class="loading" style="color:white">Menú vacío.</div>';
+             if(isAdmin) {
+                 container.innerHTML = `
+                    <div class="loading" style="color:white">
+                        <p>El menú está vacío.</p>
+                        <button onclick="uploadDefaultMenu()" class="whatsapp-btn" style="margin-top:10px; background:orange;">CARGAR MENÚ ORIGINAL</button>
+                    </div>`;
+             } else {
+                 container.innerHTML = '<div class="loading" style="color:white">Menú no disponible.</div>';
+             }
              return;
         }
 
@@ -116,6 +157,19 @@ function loadMenu() {
         console.error("Error loading menu:", error);
         container.innerHTML = '<div class="loading">Error de conexión.</div>';
     });
+}
+
+function uploadDefaultMenu() {
+    if(!confirm("¿Subir el menú original (con opciones) a la base de datos?")) return;
+    const batch = db.batch();
+    ORIGINAL_MENU.forEach((item) => {
+        const docRef = db.collection("menu").doc();
+        batch.set(docRef, item);
+    });
+    batch.commit().then(() => {
+        alert("Menú restaurado!");
+        loadMenu();
+    }).catch(e => alert("Error: " + e.message));
 }
 
 function renderMenuHTML(sections) {
@@ -137,10 +191,22 @@ function renderMenuHTML(sections) {
                 </div>`;
             }
             
+            // Image handling
             let imgSrc = item.imageUrl || ""; 
             let imgTag = "";
             if(imgSrc) {
                 imgTag = `<img src="${imgSrc}" onclick="openLightbox('${imgSrc}')" style="width:100%; height:200px; object-fit:cover; border-radius:8px; margin-bottom:10px; cursor:zoom-in;">`;
+            }
+
+            // Options Handling (The Dropdown!)
+            let optionsHTML = '';
+            if(item.options && item.options.length > 0) {
+                optionsHTML = `<select id="opt-${item.id}" class="item-options-select">`;
+                item.options.forEach(opt => {
+                    // We store price in value to make math easy later
+                    optionsHTML += `<option value="${opt.name}|${opt.price}">${opt.name} ${opt.price > 0 ? '(+$'+opt.price+')' : ''}</option>`;
+                });
+                optionsHTML += `</select>`;
             }
 
             html += `
@@ -151,6 +217,7 @@ function renderMenuHTML(sections) {
                     <span class="item-price">$${item.price}</span>
                 </div>
                 <p class="item-desc">${item.desc}</p>
+                ${optionsHTML}
                 <button class="btn-add" onclick="addToCart('${item.id}', '${item.name}', ${item.price})">Agregar</button>
                 ${adminBtns}
             </div>`;
@@ -160,7 +227,93 @@ function renderMenuHTML(sections) {
     container.innerHTML = html;
 }
 
-// --- 6. ADMIN ACTIONS ---
+// --- 7. CART SYSTEM (Restored Logic) ---
+function addToCart(id, baseName, basePrice) {
+    let finalName = baseName;
+    let finalPrice = basePrice;
+
+    // Check for Options
+    const select = document.getElementById(`opt-${id}`);
+    if (select) {
+        const val = select.value;
+        if(val) {
+            const parts = val.split('|'); // Splits "Cambio a Gajo|30"
+            const optName = parts[0];
+            const optPrice = parseFloat(parts[1]);
+            
+            if(optName !== "Con Papas Fritas") {
+                finalName += ` (${optName})`;
+            }
+            finalPrice += optPrice;
+        }
+    }
+
+    // Add to cart array
+    const existing = cart.find(i => i.name === finalName && i.price === finalPrice);
+    if (existing) {
+        existing.qty++;
+    } else {
+        cart.push({ id: id, name: finalName, price: finalPrice, qty: 1 });
+    }
+    updateCartUI();
+}
+
+function updateCartUI() {
+    const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+    const count = cart.reduce((acc, item) => acc + item.qty, 0);
+    
+    document.getElementById('cart-count').innerText = count;
+    document.getElementById('cart-total').innerText = "$" + total;
+    document.getElementById('modal-total').innerText = "$" + total;
+    
+    const floater = document.getElementById('cart-floater');
+    if (count > 0) floater.classList.add('active');
+    else floater.classList.remove('active');
+    
+    renderCartList();
+}
+
+function renderCartList() {
+    const list = document.getElementById('cart-items');
+    if (cart.length === 0) {
+        list.innerHTML = '<p class="empty-msg">Tu carrito está vacío.</p>';
+        return;
+    }
+    
+    list.innerHTML = cart.map((item, index) => `
+        <div class="cart-item-row">
+            <div class="item-details-left">
+                <h4>${item.name}</h4>
+                <p>Cantidad: ${item.qty}</p>
+            </div>
+            <div class="item-price-right">
+                <span class="price">$${item.price * item.qty}</span>
+                <button class="delete-btn" onclick="removeFromCart(${index})">Eliminar</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCartUI();
+}
+
+function openCart() { document.getElementById('cart-modal').classList.add('open'); }
+function closeCart() { document.getElementById('cart-modal').classList.remove('open'); }
+
+function sendOrder() {
+    if (cart.length === 0) return;
+    let msg = "Hola Bongless 2020, quiero pedir:\n\n";
+    cart.forEach(item => {
+        msg += `▪ ${item.qty}x ${item.name} - $${item.price * item.qty}\n`;
+    });
+    const total = document.getElementById('modal-total').innerText;
+    msg += `\n*TOTAL: ${total}*`;
+    window.open(`https://wa.me/5216861969928?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// --- 8. ADMIN: ADD/EDIT/DELETE ---
 function openAdminModal() {
     document.getElementById('edit-id').value = "";
     document.getElementById('edit-name').value = "";
@@ -193,6 +346,8 @@ function saveItem() {
         section: document.getElementById('edit-section').value,
         imageUrl: document.getElementById('edit-img').value
     };
+    // Note: Admin panel doesn't currently support editing Options arrays visually
+    // Items added here will have no options.
 
     if (id) {
         db.collection("menu").doc(id).update(data).then(() => {
@@ -213,63 +368,17 @@ function deleteItem(id) {
     }
 }
 
-// --- 7. CART ---
-function addToCart(id, name, price) {
-    const existing = cart.find(i => i.id === id);
-    if (existing) existing.qty++;
-    else cart.push({ id, name, price, qty: 1 });
-    updateCartUI();
-}
-function updateCartUI() {
-    const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-    const count = cart.reduce((acc, item) => acc + item.qty, 0);
-    document.getElementById('cart-count').innerText = count;
-    document.getElementById('cart-total').innerText = "$" + total;
-    document.getElementById('modal-total').innerText = "$" + total;
-    const floater = document.getElementById('cart-floater');
-    if (count > 0) floater.classList.add('active');
-    else floater.classList.remove('active');
-    renderCartList();
-}
-function renderCartList() {
-    const list = document.getElementById('cart-items');
-    if (cart.length === 0) { list.innerHTML = '<p class="empty-msg">Tu carrito está vacío.</p>'; return; }
-    list.innerHTML = cart.map((item, index) => `
-        <div class="cart-item-row">
-            <div class="item-details-left"><h4>${item.name}</h4><p>Cantidad: ${item.qty}</p></div>
-            <div class="item-price-right"><span class="price">$${item.price * item.qty}</span><button class="delete-btn" onclick="removeFromCart(${index})">Eliminar</button></div>
-        </div>
-    `).join('');
-}
-function removeFromCart(index) { cart.splice(index, 1); updateCartUI(); }
-function openCart() { document.getElementById('cart-modal').classList.add('open'); }
-function closeCart() { document.getElementById('cart-modal').classList.remove('open'); }
-function sendOrder() {
-    if (cart.length === 0) return;
-    let msg = "Hola Bongless 2020, quiero pedir:\n\n";
-    cart.forEach(item => { msg += `▪ ${item.qty}x ${item.name} - $${item.price * item.qty}\n`; });
-    const total = document.getElementById('modal-total').innerText;
-    msg += `\n*TOTAL: ${total}*`;
-    window.open(`https://wa.me/5216861969928?text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-// --- 8. GALLERY (1.jpg to 16.jpg) ---
+// --- 9. GALLERY (1-16.jpg) ---
 function setupGallery() {
     const wrapper = document.getElementById('gallery-wrapper');
     if(!wrapper) return;
-    
-    // Automatically generate list for 1.jpg to 16.jpg
     const images = [];
     for (let i = 1; i <= 16; i++) {
         images.push(`assets/images/gallery/${i}.jpg`);
     }
-
     wrapper.innerHTML = images.map(src => 
-        `<div class="swiper-slide">
-            <img src="${src}" onclick="openLightbox('${src}')" onerror="this.style.display='none'">
-        </div>`
+        `<div class="swiper-slide"><img src="${src}" onclick="openLightbox('${src}')"></div>`
     ).join('');
-
     new Swiper(".mySwiper", {
         pagination: { el: ".swiper-pagination", dynamicBullets: true },
         loop: true,
