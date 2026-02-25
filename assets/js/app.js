@@ -1,5 +1,5 @@
-// --- 1. FIREBASE CONFIGURATION ---
-// PASTE YOUR KEYS HERE (Keep the structure exactly like this)
+// --- 1. FIREBASE CONFIG ---
+// PASTE YOUR KEYS HERE (No import statements!)
 const firebaseConfig = {
   apiKey: "AIzaSyBOvsein855aMcyGkw4GTkZ3UD_j-36QGQ",
   authDomain: "bongless2020.firebaseapp.com",
@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:959363193575:web:40e71b7169bdcdcac46042"
 };
 
-// Initialize Firebase Safely
+// Initialize Firebase
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
@@ -23,39 +23,39 @@ let isAdmin = false;
 let cart = [];
 let menuData = [];
 
-// --- 3. ORIGINAL DATA (With Options Restored!) ---
+// --- 3. ORIGINAL DATA BACKUP (With Options!) ---
 const ORIGINAL_MENU = [
     {
         section: "combos", name: "PA'L ANTOJO", price: 160, desc: "250grs de boneless, papas fritas, aderezos y vegetales.",
         options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 30}]
     },
     {
-        section: "combos", name: "PA'QUE DISFRUTES", price: 200, desc: "200grs de boneless, 200grs de papas fritas, bañado en salsa chipotle.",
+        section: "combos", name: "PA'QUE DISFRUTES", price: 200, desc: "200grs de boneless, 200grs de papas fritas, bañado en salsa chipotle, ranch y perejil.",
         options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 40}]
     },
     {
-        section: "combos", name: "PA'QUE PRUEBES", price: 220, desc: "300grs de boneless, papas, aros de cebolla.",
+        section: "combos", name: "PA'QUE PRUEBES", price: 220, desc: "300grs de boneless, porción de papas fritas, 5 aros de cebolla, aderezos y vegetales.",
         options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 30}]
     },
     {
-        section: "combos", name: "PA'LOS DEMAS", price: 260, desc: "500grs de boneless, papas fritas, aderezos.",
+        section: "combos", name: "PA'LOS DEMAS", price: 260, desc: "500grs de boneless, papas fritas, aderezos y vegetales.",
         options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 30}]
     },
     {
-        section: "combos", name: "PA'QUE TE HARTES", price: 520, desc: "1kg de boneless, papas, aros, vegetales.",
+        section: "combos", name: "PA'QUE TE HARTES", price: 520, desc: "1kg de boneless, 1 orden de papas fritas, 1 orden de aros de cebolla, aderezos y vegetales.",
         options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 40}, {name: "Extra Papas Gajo", price: 60}]
     },
     {
-        section: "combos", name: "PA'L ANTOJO ALITAS", price: 180, desc: "10pz de alitas, papas fritas, aderezos.",
+        section: "combos", name: "PA'L ANTOJO ALITAS", price: 180, desc: "10pz de alitas, papas fritas, aderezos y vegetales.",
         options: [{name: "Con Papas Fritas", price: 0}, {name: "Cambio a Papas Gajo", price: 30}]
     },
     {
-        section: "especiales", name: "PA'QUE TE MANCHES", price: 130, desc: "Papas fritas cubiertas de queso cheddar con tocino.",
+        section: "especiales", name: "PA'QUE TE MANCHES", price: 130, desc: "Papas fritas cubiertas de queso cheddar con tocino, cebollín y un toque de perejil.",
         options: [{name: "Con Papas Fritas", price: 0}, {name: "Con Papas Gajo", price: 20}]
     },
-    { section: "especiales", name: "BOWL-LESS", price: 200, desc: "Lechuga romana con boneless, tomate cherry y parmesano." },
+    { section: "especiales", name: "BOWL-LESS", price: 200, desc: "Lechuga romana con una porción de boneless, tomate cherry, queso parmesano y aderezo ranch." },
     { section: "ordenes", name: "Orden Papas Fritas", price: 80, desc: "Orden individual." },
-    { section: "ordenes", name: "Orden Aros de Cebolla", price: 100, desc: "Aros empanizados." },
+    { section: "ordenes", name: "Orden Aros de Cebolla", price: 100, desc: "Orden individual." },
     { section: "ordenes", name: "Dedos de Queso (6pz)", price: 120, desc: "Con aderezo." },
     { section: "ordenes", name: "Orden Papas Gajo", price: 120, desc: "Sazonadas." }
 ];
@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupScrollListener();
 });
 
+// --- 5. SCROLL LISTENER (HIDE HEADER) ---
 function setupScrollListener() {
     let lastScrollTop = 0;
     const header = document.querySelector(".main-header");
@@ -84,7 +85,7 @@ function setupScrollListener() {
     }, false);
 }
 
-// --- 5. AUTH & ADMIN ---
+// --- 6. AUTH & ADMIN ---
 function setupAuthListener() {
     auth.onAuthStateChanged(user => {
         const adminBtn = document.getElementById('admin-login-btn');
@@ -119,7 +120,7 @@ function loginAdmin() {
         .catch(e => alert("Error: " + e.message));
 }
 
-// --- 6. MENU LOGIC ---
+// --- 7. MENU LOAD & RENDER ---
 function loadMenu() {
     const container = document.getElementById('menu-list');
     if(!container.querySelector('.menu-section')) {
@@ -138,13 +139,12 @@ function loadMenu() {
             if (sections[sec]) sections[sec].push(item);
         });
 
-        // IF DB EMPTY: Show Restore Button
         if(menuData.length === 0) {
              if(isAdmin) {
                  container.innerHTML = `
                     <div class="loading" style="color:white">
                         <p>El menú está vacío.</p>
-                        <button onclick="uploadDefaultMenu()" class="whatsapp-btn" style="margin-top:10px; background:orange;">CARGAR MENÚ ORIGINAL</button>
+                        <button onclick="uploadDefaultMenu()" class="whatsapp-btn" style="margin-top:10px; background:orange;">RESTAURAR MENÚ ORIGINAL</button>
                     </div>`;
              } else {
                  container.innerHTML = '<div class="loading" style="color:white">Menú no disponible.</div>';
@@ -159,15 +159,16 @@ function loadMenu() {
     });
 }
 
+// Function to upload the original menu (with options) to Firebase
 function uploadDefaultMenu() {
-    if(!confirm("¿Subir el menú original (con opciones) a la base de datos?")) return;
+    if(!confirm("¿Subir el menú original a la base de datos?")) return;
     const batch = db.batch();
     ORIGINAL_MENU.forEach((item) => {
         const docRef = db.collection("menu").doc();
         batch.set(docRef, item);
     });
     batch.commit().then(() => {
-        alert("Menú restaurado!");
+        alert("Menú restaurado con éxito.");
         loadMenu();
     }).catch(e => alert("Error: " + e.message));
 }
@@ -191,20 +192,20 @@ function renderMenuHTML(sections) {
                 </div>`;
             }
             
-            // Image handling
             let imgSrc = item.imageUrl || ""; 
             let imgTag = "";
             if(imgSrc) {
                 imgTag = `<img src="${imgSrc}" onclick="openLightbox('${imgSrc}')" style="width:100%; height:200px; object-fit:cover; border-radius:8px; margin-bottom:10px; cursor:zoom-in;">`;
             }
 
-            // Options Handling (The Dropdown!)
+            // CREATE DROPDOWN FOR OPTIONS
             let optionsHTML = '';
             if(item.options && item.options.length > 0) {
-                optionsHTML = `<select id="opt-${item.id}" class="item-options-select">`;
+                optionsHTML = `<select id="opt-${item.id}" class="custom-select" style="margin-top:auto;">`;
                 item.options.forEach(opt => {
-                    // We store price in value to make math easy later
-                    optionsHTML += `<option value="${opt.name}|${opt.price}">${opt.name} ${opt.price > 0 ? '(+$'+opt.price+')' : ''}</option>`;
+                    // We store name and price in the value to read it easily later
+                    // Format: "Name::Price"
+                    optionsHTML += `<option value="${opt.name}::${opt.price}">${opt.name} ${opt.price > 0 ? '(+$'+opt.price+')' : ''}</option>`;
                 });
                 optionsHTML += `</select>`;
             }
@@ -227,20 +228,21 @@ function renderMenuHTML(sections) {
     container.innerHTML = html;
 }
 
-// --- 7. CART SYSTEM (Restored Logic) ---
+// --- 8. CART SYSTEM (FIXED) ---
 function addToCart(id, baseName, basePrice) {
     let finalName = baseName;
     let finalPrice = basePrice;
 
-    // Check for Options
+    // Check if item has options
     const select = document.getElementById(`opt-${id}`);
     if (select) {
-        const val = select.value;
+        const val = select.value; // "Name::Price"
         if(val) {
-            const parts = val.split('|'); // Splits "Cambio a Gajo|30"
+            const parts = val.split('::');
             const optName = parts[0];
             const optPrice = parseFloat(parts[1]);
             
+            // Only append name if it's an upgrade
             if(optName !== "Con Papas Fritas") {
                 finalName += ` (${optName})`;
             }
@@ -313,7 +315,7 @@ function sendOrder() {
     window.open(`https://wa.me/5216861969928?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// --- 8. ADMIN: ADD/EDIT/DELETE ---
+// --- 9. ADMIN EDIT/SAVE ---
 function openAdminModal() {
     document.getElementById('edit-id').value = "";
     document.getElementById('edit-name').value = "";
@@ -346,8 +348,6 @@ function saveItem() {
         section: document.getElementById('edit-section').value,
         imageUrl: document.getElementById('edit-img').value
     };
-    // Note: Admin panel doesn't currently support editing Options arrays visually
-    // Items added here will have no options.
 
     if (id) {
         db.collection("menu").doc(id).update(data).then(() => {
@@ -368,7 +368,7 @@ function deleteItem(id) {
     }
 }
 
-// --- 9. GALLERY (1-16.jpg) ---
+// --- 10. GALLERY & LIGHTBOX ---
 function setupGallery() {
     const wrapper = document.getElementById('gallery-wrapper');
     if(!wrapper) return;
@@ -377,7 +377,7 @@ function setupGallery() {
         images.push(`assets/images/gallery/${i}.jpg`);
     }
     wrapper.innerHTML = images.map(src => 
-        `<div class="swiper-slide"><img src="${src}" onclick="openLightbox('${src}')"></div>`
+        `<div class="swiper-slide"><img src="${src}" onclick="openLightbox('${src}')" onerror="this.style.display='none'"></div>`
     ).join('');
     new Swiper(".mySwiper", {
         pagination: { el: ".swiper-pagination", dynamicBullets: true },
