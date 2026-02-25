@@ -3,8 +3,8 @@
     --bg-card: #141414;
     --text-primary: #ffffff;
     --text-secondary: #a0a0a0;
-    --brand-orange: #FF5500; /* Fuego */
-    --brand-gold: #D4AF37;   /* Gold */
+    --brand-orange: #FF5500;
+    --brand-gold: #D4AF37;
     --success: #25D366;
     --border: #2a2a2a;
     --radius: 12px;
@@ -17,33 +17,44 @@ a { text-decoration: none; color: inherit; }
 
 /* --- HEADER --- */
 .main-header {
-    background: linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(10,10,10,0.95) 100%);
-    position: fixed; width: 100%; top: 0; z-index: 100;
+    background: linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(10,10,10,0.98) 100%);
+    position: fixed; 
+    width: 100%; 
+    top: 0; 
+    z-index: 100;
     border-bottom: 2px solid var(--brand-orange);
-    padding-bottom: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    padding-bottom: 15px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    transition: transform 0.4s ease-in-out; /* Smooth slide animation */
 }
-.brand-container { padding: 25px 0 15px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
-.logo-wrapper { width: 90px; height: 90px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; background: #fff; box-shadow: 0 0 20px rgba(255, 85, 0, 0.4); }
+
+/* This class hides the header when added by JS */
+.header-hidden {
+    transform: translateY(-100%);
+}
+
+.brand-container { padding: 15px 0 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.logo-wrapper { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; background: #fff; box-shadow: 0 0 20px rgba(255, 85, 0, 0.4); }
 .logo-img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.05); }
 .brand-title-block { display: flex; flex-direction: column; align-items: center; line-height: 1; }
-.main-title { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 3rem; color: #fff; display: flex; align-items: center; }
+.main-title { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 2.5rem; color: #fff; display: flex; align-items: center; }
 .fire-letter { color: var(--text-primary); display: flex; align-items: center; }
-.flame-icon { color: var(--brand-orange); font-size: 2.2rem; margin: 0 2px 0 1px; text-shadow: 0 0 10px rgba(255, 85, 0, 0.8); }
-.year-stack { display: flex; flex-direction: column; font-size: 1.1rem; line-height: 0.85; margin-left: 4px; font-weight: 700; }
-.sub-title { font-family: 'Oswald', sans-serif; color: var(--brand-gold); font-size: 0.9rem; letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; }
+.flame-icon { color: var(--brand-orange); font-size: 1.8rem; margin: 0 2px 0 1px; }
+.year-stack { display: flex; flex-direction: column; font-size: 0.9rem; line-height: 0.85; margin-left: 4px; font-weight: 700; }
+.sub-title { font-family: 'Oswald', sans-serif; color: var(--brand-gold); font-size: 0.8rem; letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; }
 
 /* --- INFO CARD --- */
-.info-card { text-align: center; font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px; padding: 0 15px; }
-.info-line { margin-bottom: 6px; }
+.info-card { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px; padding: 0 15px; }
+.info-line { margin-bottom: 5px; }
 .info-line i { color: var(--brand-gold); margin-right: 5px; }
 .info-card a { color: var(--text-primary); border-bottom: 1px dotted var(--brand-gold); }
-.socials { margin-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.social-link { display: flex; align-items: center; gap: 8px; color: var(--brand-gold); font-size: 0.95rem; border: 1px solid rgba(212, 175, 55, 0.3); padding: 6px 15px; border-radius: 20px; width: fit-content; }
-.social-link:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--brand-gold); }
-.status-badge { display: inline-block; background: rgba(0, 255, 0, 0.1); color: #00ff00; font-weight: bold; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-top: 15px; border: 1px solid rgba(0, 255, 0, 0.3); }
+.socials { margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.social-link { display: flex; align-items: center; gap: 8px; color: var(--brand-gold); font-size: 0.9rem; border: 1px solid rgba(212, 175, 55, 0.3); padding: 5px 12px; border-radius: 20px; width: fit-content; }
+.status-badge { display: inline-block; background: rgba(0, 255, 0, 0.1); color: #00ff00; font-weight: bold; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-top: 10px; border: 1px solid rgba(0, 255, 0, 0.3); }
 
 /* --- MENU GRID --- */
-.menu-container { max-width: 1000px; margin: 0 auto; padding: 20px 15px; margin-top: 280px; } /* Added margin for fixed header */
+/* Increased margin-top so the menu doesn't get hidden behind the header */
+.menu-container { max-width: 1000px; margin: 0 auto; padding: 20px 15px; margin-top: 320px; }
 .menu-section { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-bottom: 30px; }
 .section-title { grid-column: 1 / -1; color: var(--brand-gold); text-transform: uppercase; font-family: 'Oswald', sans-serif; font-size: 1.5rem; font-weight: 700; border-bottom: 1px solid var(--brand-orange); padding-bottom: 5px; margin: 30px 0 15px; }
 
@@ -75,12 +86,13 @@ a { text-decoration: none; color: inherit; }
 .whatsapp-btn { width: 100%; background: var(--success); color: #fff; border: none; padding: 15px; border-radius: 12px; font-size: 1.1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
 
-/* GALLERY */
+/* --- GALLERY FIXES --- */
+/* 1. Push it down so it's not hidden by header */
 .gallery-section { 
     max-width: 800px; 
-    margin: 20px auto 10px; 
+    margin: 0 auto; 
     padding: 0 15px; 
-    margin-top: 260px; /* Keeps it below the header */
+    margin-top: 320px; 
 }
 
 .gallery-title { 
@@ -93,30 +105,36 @@ a { text-decoration: none; color: inherit; }
     text-align: center; 
 }
 
+/* 2. Make the container TALLER (Portrait Mode) */
 .swiper { 
     width: 100%; 
-    height: 350px; /* Increased height so images are bigger */
+    height: 500px; /* Taller height for phone pictures */
     border-radius: var(--radius); 
     border: 1px solid var(--border); 
-    background: #000; 
+    background: transparent; /* No black bars */
 }
 
 .swiper-slide { 
     text-align: center; 
-    background: #000; 
+    background: transparent; 
     display: flex; 
     justify-content: center; 
     align-items: center; 
     overflow: hidden; 
 }
 
+/* 3. Cover the space (No black bars) */
 .swiper-slide img { 
     display: block; 
     width: 100%; 
     height: 100%; 
-    object-fit: contain; /* <--- THIS IS THE FIX. It stops the zooming. */
-    background-color: #000;
+    object-fit: cover; /* Fills the box cleanly */
+    border-radius: var(--radius);
 }
+
+.swiper-pagination-bullet { background: #fff; opacity: 0.5; }
+.swiper-pagination-bullet-active { background: var(--brand-orange); opacity: 1; }
+.gallery-note { text-align: center; font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; }
 
 /* LIGHTBOX */
 .lightbox { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.95); backdrop-filter: blur(5px); justify-content: center; align-items: center; }
@@ -125,7 +143,7 @@ a { text-decoration: none; color: inherit; }
 .lightbox-close { position: absolute; top: 15px; right: 25px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 3001; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* --- ADMIN NEW STYLES --- */
+/* ADMIN */
 #admin-login-btn { position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.5); color: #555; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.7rem; z-index: 9999; }
 .admin-controls { display: flex; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333; }
 .btn-edit { background: var(--brand-gold); color: #000; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1; }
@@ -138,5 +156,5 @@ a { text-decoration: none; color: inherit; }
 @media (min-width: 768px) {
     .modal-overlay { align-items: center; justify-content: center; }
     .modal-content { border-radius: 20px; max-height: 80vh; }
-    .menu-container, .gallery-section { margin-top: 220px; }
+    .menu-container, .gallery-section { margin-top: 250px; }
 }
