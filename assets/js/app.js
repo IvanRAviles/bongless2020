@@ -1,5 +1,5 @@
 // --- 1. FIREBASE CONFIG ---
-// PASTE YOUR KEYS HERE. (Do not paste 'import' lines!)
+// PASTE YOUR KEYS INSIDE HERE (Do not use 'import')
 const firebaseConfig = {
   apiKey: "AIzaSyBOvsein855aMcyGkw4GTkZ3UD_j-36QGQ",
   authDomain: "bongless2020.firebaseapp.com",
@@ -23,48 +23,35 @@ let isAdmin = false;
 let cart = [];
 let menuData = [];
 
-// --- 3. DATA BACKUP (THE ORIGINAL MENU) ---
-// This allows us to restore the menu if the database is empty.
-const ORIGINAL_MENU = [
-    {section: "combos", name: "PA'L ANTOJO", price: 160, desc: "250grs de boneless, papas fritas, aderezos y vegetales."},
-    {section: "combos", name: "PA'QUE DISFRUTES", price: 200, desc: "200grs de boneless, 200grs de papas fritas, bañado en salsa chipotle."},
-    {section: "combos", name: "PA'QUE PRUEBES", price: 220, desc: "300grs de boneless, papas, aros de cebolla."},
-    {section: "combos", name: "PA'LOS DEMAS", price: 260, desc: "500grs de boneless, papas fritas, aderezos."},
-    {section: "combos", name: "PA'QUE TE HARTES", price: 520, desc: "1kg de boneless, papas, aros, vegetales."},
-    {section: "combos", name: "PA'L ANTOJO ALITAS", price: 180, desc: "10pz de alitas, papas fritas, aderezos."},
-    {section: "especiales", name: "PA'QUE TE MANCHES", price: 130, desc: "Papas fritas cubiertas de queso cheddar con tocino."},
-    {section: "especiales", name: "BOWL-LESS", price: 200, desc: "Lechuga romana con boneless, tomate cherry y parmesano."},
-    {section: "ordenes", name: "Orden Papas Fritas", price: 80, desc: "Orden individual."},
-    {section: "ordenes", name: "Orden Aros de Cebolla", price: 100, desc: "Aros empanizados."},
-    {section: "ordenes", name: "Dedos de Queso (6pz)", price: 120, desc: "Con aderezo."},
-    {section: "ordenes", name: "Orden Papas Gajo", price: 120, desc: "Sazonadas."}
-];
-
-// --- 4. STARTUP ---
+// --- 3. STARTUP & SCROLL LISTENER ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Auth Listener
     if (typeof auth !== 'undefined') {
         setupAuthListener();
         loadMenu();
     }
+    // Gallery
     setupGallery();
-});
 
-// --- SCROLL LOGIC (HIDE HEADER) ---
-let lastScrollTop = 0;
-window.addEventListener("scroll", function() {
+    // --- SCROLL LOGIC (HIDE HEADER) ---
+    // This makes the header disappear when you scroll down
+    let lastScrollTop = 0;
     const header = document.querySelector(".main-header");
-    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     
-    // If scrolling down AND we are past the top area
-    if (scrollTop > lastScrollTop && scrollTop > 100) {
-        header.classList.add("header-hidden"); // Hide it
-    } else {
-        header.classList.remove("header-hidden"); // Show it
-    }
-    lastScrollTop = scrollTop;
+    window.addEventListener("scroll", function() {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        if (scrollTop > lastScrollTop && scrollTop > 100) {
+            // Scrolling DOWN -> Hide Header
+            header.classList.add("header-hidden");
+        } else {
+            // Scrolling UP -> Show Header
+            header.classList.remove("header-hidden");
+        }
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    }, false);
 });
 
-// --- 5. AUTH & ADMIN ---
+// --- 4. AUTH & ADMIN ---
 function setupAuthListener() {
     auth.onAuthStateChanged(user => {
         const adminBtn = document.getElementById('admin-login-btn');
@@ -99,11 +86,10 @@ function loginAdmin() {
         .catch(e => alert("Error: " + e.message));
 }
 
-// --- 6. MENU LOGIC ---
+// --- 5. MENU LOGIC ---
 function loadMenu() {
     const container = document.getElementById('menu-list');
     
-    // Only show loading if empty
     if(!container.querySelector('.menu-section')) {
         container.innerHTML = '<div class="loading"><i class="fas fa-fire fa-spin"></i> Cargando menú...</div>';
     }
@@ -120,17 +106,8 @@ function loadMenu() {
             if (sections[sec]) sections[sec].push(item);
         });
 
-        // HANDLE EMPTY DB: Show button to Admin to restore data
         if(menuData.length === 0) {
-             if(isAdmin) {
-                 container.innerHTML = `
-                    <div class="loading" style="color:white">
-                        <p>El menú está vacío.</p>
-                        <button onclick="uploadDefaultMenu()" class="btn-add" style="margin-top:10px; background:orange;">CARGAR MENÚ ORIGINAL</button>
-                    </div>`;
-             } else {
-                 container.innerHTML = '<div class="loading" style="color:white">Menú no disponible.</div>';
-             }
+             container.innerHTML = '<div class="loading" style="color:white">Menú vacío.</div>';
              return;
         }
 
@@ -139,21 +116,6 @@ function loadMenu() {
         console.error("Error loading menu:", error);
         container.innerHTML = '<div class="loading">Error de conexión.</div>';
     });
-}
-
-function uploadDefaultMenu() {
-    if(!confirm("¿Subir el menú original a la base de datos?")) return;
-    
-    const batch = db.batch();
-    ORIGINAL_MENU.forEach((item) => {
-        const docRef = db.collection("menu").doc(); // random ID
-        batch.set(docRef, item);
-    });
-    
-    batch.commit().then(() => {
-        alert("Menú restaurado!");
-        loadMenu();
-    }).catch(e => alert("Error: " + e.message));
 }
 
 function renderMenuHTML(sections) {
@@ -174,11 +136,11 @@ function renderMenuHTML(sections) {
                     <button class="btn-delete" onclick="deleteItem('${item.id}')">Borrar</button>
                 </div>`;
             }
-            // If no image URL, check if we have a local asset match (simple mapping)
+            
             let imgSrc = item.imageUrl || ""; 
             let imgTag = "";
             if(imgSrc) {
-                imgTag = `<img src="${imgSrc}" onclick="openLightbox('${imgSrc}')" style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:10px; cursor:zoom-in;">`;
+                imgTag = `<img src="${imgSrc}" onclick="openLightbox('${imgSrc}')" style="width:100%; height:200px; object-fit:cover; border-radius:8px; margin-bottom:10px; cursor:zoom-in;">`;
             }
 
             html += `
@@ -198,7 +160,7 @@ function renderMenuHTML(sections) {
     container.innerHTML = html;
 }
 
-// --- 7. ADMIN EDIT/SAVE ---
+// --- 6. ADMIN ACTIONS ---
 function openAdminModal() {
     document.getElementById('edit-id').value = "";
     document.getElementById('edit-name').value = "";
@@ -251,7 +213,7 @@ function deleteItem(id) {
     }
 }
 
-// --- 8. CART ---
+// --- 7. CART ---
 function addToCart(id, name, price) {
     const existing = cart.find(i => i.id === id);
     if (existing) existing.qty++;
@@ -291,42 +253,32 @@ function sendOrder() {
     window.open(`https://wa.me/5216861969928?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// --- 9. GALLERY & LIGHTBOX ---
+// --- 8. GALLERY (1.jpg to 16.jpg) ---
 function setupGallery() {
     const wrapper = document.getElementById('gallery-wrapper');
     if(!wrapper) return;
     
-    // We generate the list of 16 images automatically based on your folder
-    // Path: assets/images/gallery/1.jpg  ->  16.jpg
+    // Automatically generate list for 1.jpg to 16.jpg
     const images = [];
     for (let i = 1; i <= 16; i++) {
         images.push(`assets/images/gallery/${i}.jpg`);
     }
 
-    // Inject the images into the HTML
     wrapper.innerHTML = images.map(src => 
         `<div class="swiper-slide">
-            <img src="${src}" onclick="openLightbox('${src}')" alt="Platillo Bongless" style="cursor:zoom-in;">
+            <img src="${src}" onclick="openLightbox('${src}')" onerror="this.style.display='none'">
         </div>`
     ).join('');
 
-    // Initialize the Swiper (The slider animation)
     new Swiper(".mySwiper", {
-        pagination: { 
-            el: ".swiper-pagination", 
-            dynamicBullets: true 
-        },
-        loop: true, // Makes it go round in a circle
-        autoplay: { 
-            delay: 2500, // Slides every 2.5 seconds
-            disableOnInteraction: false 
-        },
+        pagination: { el: ".swiper-pagination", dynamicBullets: true },
+        loop: true,
+        autoplay: { delay: 2500, disableOnInteraction: false },
         slidesPerView: 1,
-        spaceBetween: 0
+        spaceBetween: 10
     });
 }
 
-// Lightbox Logic (Keep this below the gallery function)
 function openLightbox(src) {
     const lb = document.getElementById('lightbox');
     const img = document.getElementById('lightbox-img');
