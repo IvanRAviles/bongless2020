@@ -1,5 +1,4 @@
-// --- 1. FIREBASE CONFIG ---
-// PASTE YOUR KEYS HERE (No import statements!)
+// --- 1. FIREBASE CONFIGURATION ---
 const firebaseConfig = {
   apiKey: "AIzaSyBOvsein855aMcyGkw4GTkZ3UD_j-36QGQ",
   authDomain: "bongless2020.firebaseapp.com",
@@ -9,7 +8,7 @@ const firebaseConfig = {
   appId: "1:959363193575:web:40e71b7169bdcdcac46042"
 };
 
-// Initialize Firebase
+
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
@@ -23,7 +22,7 @@ let isAdmin = false;
 let cart = [];
 let menuData = [];
 
-// --- 3. ORIGINAL DATA BACKUP (With Options!) ---
+// --- 3. ORIGINAL DATA BACKUP ---
 const ORIGINAL_MENU = [
     {
         section: "combos", name: "PA'L ANTOJO", price: 160, desc: "250grs de boneless, papas fritas, aderezos y vegetales.",
@@ -70,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupScrollListener();
 });
 
-// --- 5. SCROLL LISTENER (HIDE HEADER) ---
 function setupScrollListener() {
     let lastScrollTop = 0;
     const header = document.querySelector(".main-header");
@@ -85,7 +83,7 @@ function setupScrollListener() {
     }, false);
 }
 
-// --- 6. AUTH & ADMIN ---
+// --- 5. AUTH & ADMIN ---
 function setupAuthListener() {
     auth.onAuthStateChanged(user => {
         const adminBtn = document.getElementById('admin-login-btn');
@@ -120,7 +118,7 @@ function loginAdmin() {
         .catch(e => alert("Error: " + e.message));
 }
 
-// --- 7. MENU LOAD & RENDER ---
+// --- 6. MENU LOAD & RENDER ---
 function loadMenu() {
     const container = document.getElementById('menu-list');
     if(!container.querySelector('.menu-section')) {
@@ -159,16 +157,26 @@ function loadMenu() {
     });
 }
 
-// Function to upload the original menu (with options) to Firebase
 function uploadDefaultMenu() {
-    if(!confirm("¿Subir el menú original a la base de datos?")) return;
-    const batch = db.batch();
-    ORIGINAL_MENU.forEach((item) => {
-        const docRef = db.collection("menu").doc();
-        batch.set(docRef, item);
-    });
-    batch.commit().then(() => {
-        alert("Menú restaurado con éxito.");
+    if(!confirm("¿Deseas sobreescribir la base de datos con el menú original?")) return;
+    
+    // First, delete everything currently in the DB to avoid duplicates
+    db.collection("menu").get().then(snapshot => {
+        const batch = db.batch();
+        snapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        return batch.commit();
+    }).then(() => {
+        // Then add the fresh items with options
+        const batch = db.batch();
+        ORIGINAL_MENU.forEach((item) => {
+            const docRef = db.collection("menu").doc();
+            batch.set(docRef, item);
+        });
+        return batch.commit();
+    }).then(() => {
+        alert("Menú restaurado con éxito. Las opciones de papas volverán a aparecer.");
         loadMenu();
     }).catch(e => alert("Error: " + e.message));
 }
@@ -177,6 +185,13 @@ function renderMenuHTML(sections) {
     const container = document.getElementById('menu-list');
     let html = '';
     const titles = { combos: "Combos Bongless", especiales: "Especiales", ordenes: "Ordenes Extra" };
+
+    // Add a button for Admin to reset menu even if not empty (in case they have bad data)
+    if(isAdmin) {
+        html += `<div style="text-align:center; margin-bottom:20px;">
+                    <button onclick="uploadDefaultMenu()" style="background:#333; color:#555; border:none; padding:5px; border-radius:5px; font-size:0.7rem;">Forzar Restauración de Menú</button>
+                 </div>`;
+    }
 
     for (const [key, items] of Object.entries(sections)) {
         if (items.length === 0 && !isAdmin) continue;
@@ -198,17 +213,18 @@ function renderMenuHTML(sections) {
                 imgTag = `<img src="${imgSrc}" onclick="openLightbox('${imgSrc}')" style="width:100%; height:200px; object-fit:cover; border-radius:8px; margin-bottom:10px; cursor:zoom-in;">`;
             }
 
-            // CREATE DROPDOWN FOR OPTIONS
+            // --- OPTIONS DROPDOWN ---
             let optionsHTML = '';
             if(item.options && item.options.length > 0) {
-                optionsHTML = `<select id="opt-${item.id}" class="custom-select" style="margin-top:auto;">`;
+                optionsHTML = `<select id="opt-${item.id}" class="item-options-select">`;
                 item.options.forEach(opt => {
-                    // We store name and price in the value to read it easily later
-                    // Format: "Name::Price"
                     optionsHTML += `<option value="${opt.name}::${opt.price}">${opt.name} ${opt.price > 0 ? '(+$'+opt.price+')' : ''}</option>`;
                 });
                 optionsHTML += `</select>`;
             }
+
+            // --- ESCAPE SINGLE QUOTES TO FIX BUTTON BUG ---
+            const safeName = item.name.replace(/'/g, "\\'"); // Fixes "PA'L" breaking the JS
 
             html += `
             <div class="item-card">
@@ -219,7 +235,7 @@ function renderMenuHTML(sections) {
                 </div>
                 <p class="item-desc">${item.desc}</p>
                 ${optionsHTML}
-                <button class="btn-add" onclick="addToCart('${item.id}', '${item.name}', ${item.price})">Agregar</button>
+                <button class="btn-add" onclick="addToCart('${item.id}', '${safeName}', ${item.price})">Agregar</button>
                 ${adminBtns}
             </div>`;
         });
@@ -228,7 +244,7 @@ function renderMenuHTML(sections) {
     container.innerHTML = html;
 }
 
-// --- 8. CART SYSTEM (FIXED) ---
+// --- 7. CART SYSTEM ---
 function addToCart(id, baseName, basePrice) {
     let finalName = baseName;
     let finalPrice = basePrice;
@@ -242,7 +258,6 @@ function addToCart(id, baseName, basePrice) {
             const optName = parts[0];
             const optPrice = parseFloat(parts[1]);
             
-            // Only append name if it's an upgrade
             if(optName !== "Con Papas Fritas") {
                 finalName += ` (${optName})`;
             }
@@ -315,7 +330,7 @@ function sendOrder() {
     window.open(`https://wa.me/5216861969928?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// --- 9. ADMIN EDIT/SAVE ---
+// --- 8. ADMIN ACTIONS ---
 function openAdminModal() {
     document.getElementById('edit-id').value = "";
     document.getElementById('edit-name').value = "";
@@ -368,7 +383,7 @@ function deleteItem(id) {
     }
 }
 
-// --- 10. GALLERY & LIGHTBOX ---
+// --- 9. GALLERY ---
 function setupGallery() {
     const wrapper = document.getElementById('gallery-wrapper');
     if(!wrapper) return;
