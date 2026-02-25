@@ -278,25 +278,40 @@ function sendOrder() {
 
 // --- 9. GALLERY & LIGHTBOX ---
 function setupGallery() {
-    // You can restore your static images here manually or add them to DB later
-    // For now, we use a placeholder or your logo to ensure it doesn't look broken
     const wrapper = document.getElementById('gallery-wrapper');
     if(!wrapper) return;
     
-    // NOTE: Ensure these images exist in your assets folder!
-    const images = ['assets/images/logo.png']; 
-    
+    // We generate the list of 16 images automatically based on your folder
+    // Path: assets/images/gallery/1.jpg  ->  16.jpg
+    const images = [];
+    for (let i = 1; i <= 16; i++) {
+        images.push(`assets/images/gallery/${i}.jpg`);
+    }
+
+    // Inject the images into the HTML
     wrapper.innerHTML = images.map(src => 
-        `<div class="swiper-slide"><img src="${src}" onclick="openLightbox('${src}')"></div>`
+        `<div class="swiper-slide">
+            <img src="${src}" onclick="openLightbox('${src}')" alt="Platillo Bongless" style="cursor:zoom-in;">
+        </div>`
     ).join('');
 
+    // Initialize the Swiper (The slider animation)
     new Swiper(".mySwiper", {
-        pagination: { el: ".swiper-pagination", dynamicBullets: true },
-        loop: true,
-        autoplay: { delay: 3000 }
+        pagination: { 
+            el: ".swiper-pagination", 
+            dynamicBullets: true 
+        },
+        loop: true, // Makes it go round in a circle
+        autoplay: { 
+            delay: 2500, // Slides every 2.5 seconds
+            disableOnInteraction: false 
+        },
+        slidesPerView: 1,
+        spaceBetween: 0
     });
 }
 
+// Lightbox Logic (Keep this below the gallery function)
 function openLightbox(src) {
     const lb = document.getElementById('lightbox');
     const img = document.getElementById('lightbox-img');
