@@ -49,14 +49,14 @@
         <h3 class="gallery-title">Nuestros Platillos</h3>
         <div class="swiper mySwiper">
             <div class="swiper-wrapper" id="gallery-wrapper">
-                <!-- Javascript will inject images -->
+                <!-- JS will inject images here -->
             </div>
             <div class="swiper-pagination"></div>
         </div>
         <p class="gallery-note"><i class="fas fa-search-plus"></i> Toca una imagen para ampliar</p>
     </section>
 
-    <!-- Menu -->
+    <!-- Menu Container -->
     <main class="menu-container" id="menu-list">
         <div class="loading"><i class="fas fa-fire fa-spin"></i> Cargando menú...</div>
     </main>
@@ -93,7 +93,7 @@
         <img class="lightbox-content" id="lightbox-img">
     </div>
 
-    <!-- ADMIN UI ELEMENTS -->
+    <!-- ADMIN UI -->
     <button id="admin-login-btn">Admin</button>
     <div id="admin-add-btn" class="floating-add-btn" onclick="openAdminModal()"><i class="fas fa-plus"></i></div>
 
@@ -112,7 +112,7 @@
         </div>
     </div>
 
-    <!-- Edit/Add Item Modal -->
+    <!-- Add/Edit Item Modal -->
     <div class="modal-overlay" id="item-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -140,7 +140,7 @@
         </div>
     </div>
 
-    <!-- FIREBASE SDKs -->
+    <!-- FIREBASE SDKs (Must be before app.js) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
