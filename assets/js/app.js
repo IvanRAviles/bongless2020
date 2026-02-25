@@ -49,6 +49,21 @@ document.addEventListener('DOMContentLoaded', () => {
     setupGallery();
 });
 
+// --- SCROLL LOGIC (HIDE HEADER) ---
+let lastScrollTop = 0;
+window.addEventListener("scroll", function() {
+    const header = document.querySelector(".main-header");
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
+    // If scrolling down AND we are past the top area
+    if (scrollTop > lastScrollTop && scrollTop > 100) {
+        header.classList.add("header-hidden"); // Hide it
+    } else {
+        header.classList.remove("header-hidden"); // Show it
+    }
+    lastScrollTop = scrollTop;
+});
+
 // --- 5. AUTH & ADMIN ---
 function setupAuthListener() {
     auth.onAuthStateChanged(user => {
